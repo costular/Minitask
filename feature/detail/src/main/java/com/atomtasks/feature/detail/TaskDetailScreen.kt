@@ -57,6 +57,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.costular.atomtasks.core.ui.dialogs.ExactAlarmRationale
 import com.costular.atomtasks.core.ui.mvi.EventObserver
 import com.costular.atomtasks.core.ui.utils.DateUtils.dayAsText
 import com.costular.atomtasks.core.ui.utils.ofLocalizedTime

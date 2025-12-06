@@ -33,6 +33,10 @@ internal class TaskReminderManagerImpl(
             return
         }
 
+        if (!canScheduleReminders()) {
+            return
+        }
+
         AlarmManagerCompat.setExactAndAllowWhileIdle(
             alarmManager,
             AlarmManager.RTC_WAKEUP,

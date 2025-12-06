@@ -1,4 +1,4 @@
-package com.atomtasks.feature.detail
+package com.costular.atomtasks.core.ui.dialogs
 
 import android.app.AlarmManager.ACTION_SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED
 import android.content.BroadcastReceiver
@@ -15,7 +15,7 @@ import androidx.compose.ui.res.stringResource
 import com.costular.atomtasks.core.ui.R.string as S
 
 @Composable
-internal fun ExactAlarmRationale(
+fun ExactAlarmRationale(
     onDismiss: () -> Unit,
     navigateToExactAlarmSettings: () -> Unit,
     onPermissionStateChanged: () -> Unit,

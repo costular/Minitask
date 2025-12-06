@@ -4,6 +4,8 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.Build
+import android.os.Build.VERSION_CODES.S
 import androidx.core.app.AlarmManagerCompat
 import androidx.core.content.getSystemService
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -23,6 +25,10 @@ class DailyReminderAlarmSchedulerImpl @Inject constructor(
         checkNotNull(alarmManager)
 
         if (localDateTime.isBefore(LocalDateTime.now())) {
+            return
+        }
+
+        if (Build.VERSION.SDK_INT >= S && !alarmManager!!.canScheduleExactAlarms()) {
             return
         }
 

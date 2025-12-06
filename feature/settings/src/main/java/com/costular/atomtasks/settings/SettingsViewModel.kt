@@ -14,6 +14,7 @@ import com.costular.atomtasks.settings.analytics.SettingsChangeTheme
 import com.costular.atomtasks.core.usecase.invoke
 import com.costular.atomtasks.data.settings.dailyreminder.ObserveDailyReminderUseCase
 import com.costular.atomtasks.data.settings.dailyreminder.UpdateDailyReminderUseCase
+import com.costular.atomtasks.tasks.usecase.AreExactRemindersAvailable
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.collect
@@ -31,12 +32,21 @@ class SettingsViewModel @Inject constructor(
     private val getDailyReminderUseCase: ObserveDailyReminderUseCase,
     private val updateDailyReminderUseCase: UpdateDailyReminderUseCase,
     private val atomAnalytics: AtomAnalytics,
+    private val areExactRemindersAvailable: AreExactRemindersAvailable,
 ) : MviViewModel<SettingsState>(SettingsState.Empty) {
 
     init {
         observeTheme()
         observeAutoforwardTasks()
         observeDailyReminder()
+        checkExactAlarmPermission()
+    }
+
+    private fun checkExactAlarmPermission() {
+        viewModelScope.launch {
+            val isAvailable = areExactRemindersAvailable(Unit)
+            setState { copy(shouldShowExactAlarmRationale = !isAvailable && state.value.dailyReminder?.isEnabled == true) }
+        }
     }
 
     private fun observeAutoforwardTasks() {
@@ -59,6 +69,14 @@ class SettingsViewModel @Inject constructor(
 
     fun updateDailyReminder(isEnabled: Boolean) {
         viewModelScope.launch {
+            if (isEnabled) {
+                val isAvailable = areExactRemindersAvailable(Unit)
+                if (!isAvailable) {
+                    setState { copy(shouldShowExactAlarmRationale = true) }
+                    return@launch
+                }
+            }
+
             val dailyReminder = state.value.dailyReminder ?: return@launch
 
             updateDailyReminderUseCase(
@@ -73,6 +91,11 @@ class SettingsViewModel @Inject constructor(
     fun updateDailyReminderTime(time: LocalTime) {
         dismissDailyReminderTimePicker()
         viewModelScope.launch {
+            val isAvailable = areExactRemindersAvailable(Unit)
+            if (!isAvailable) {
+                setState { copy(shouldShowExactAlarmRationale = true) }
+            }
+            
             val dailyReminder = state.value.dailyReminder ?: return@launch
 
             updateDailyReminderUseCase(
@@ -86,6 +109,11 @@ class SettingsViewModel @Inject constructor(
 
     fun clickOnDailyReminderTimePicker() {
         viewModelScope.launch {
+            val isAvailable = areExactRemindersAvailable(Unit)
+            if (!isAvailable) {
+                setState { copy(shouldShowExactAlarmRationale = true) }
+                return@launch
+            }
             setState { copy(isDailyReminderTimePickerOpen = true) }
         }
     }
@@ -93,6 +121,20 @@ class SettingsViewModel @Inject constructor(
     fun dismissDailyReminderTimePicker() {
         viewModelScope.launch {
             setState { copy(isDailyReminderTimePickerOpen = false) }
+        }
+    }
+
+    fun dismissExactAlarmRationale() {
+        setState { copy(shouldShowExactAlarmRationale = false) }
+    }
+
+    fun exactAlarmPermissionChanged() {
+        // Re-check permission logic if needed or just dismiss
+        viewModelScope.launch {
+             val isAvailable = areExactRemindersAvailable(Unit)
+             if (isAvailable) {
+                 setState { copy(shouldShowExactAlarmRationale = false) }
+             }
         }
     }
 

@@ -20,6 +20,7 @@ android {
 
 dependencies {
     implementation(projects.core.analytics)
+    implementation(projects.common.tasks)
     implementation(project(mapOf("path" to ":feature:agenda")))
     ksp(libs.hilt.compiler)
     ksp(libs.compose.destinations.ksp)

@@ -2,6 +2,7 @@ package com.costular.atomtasks.settings
 
 import android.content.Intent
 import android.net.Uri
+import android.provider.Settings
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -26,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.costular.atomtasks.core.ui.R
+import com.costular.atomtasks.core.ui.dialogs.ExactAlarmRationale
 import com.costular.atomtasks.data.settings.Theme
 import com.costular.atomtasks.settings.sections.GeneralSection
 import com.costular.atomtasks.settings.sections.SettingsAboutSection
@@ -66,6 +68,19 @@ fun SettingsScreen(
         it.getOr { null }?.let { theme ->
             viewModel.setTheme(Theme.fromString(theme))
         }
+    }
+
+    if (state.shouldShowExactAlarmRationale) {
+        val context = LocalContext.current
+        ExactAlarmRationale(
+            onDismiss = viewModel::dismissExactAlarmRationale,
+            navigateToExactAlarmSettings = {
+                val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
+                intent.data = Uri.fromParts("package", context.packageName, null)
+                context.startActivity(intent)
+            },
+            onPermissionStateChanged = viewModel::exactAlarmPermissionChanged,
+        )
     }
 
     if (state.isDailyReminderTimePickerOpen) {
