@@ -2,10 +2,13 @@ package com.costular.atomtasks.tasks.helper.recurrence
 
 import android.content.Context
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import androidx.work.workDataOf
 import com.costular.atomtasks.core.util.getDelayUntil
 import com.costular.atomtasks.tasks.worker.PopulateTasksWorker
+import com.costular.atomtasks.tasks.worker.RecurrenceGenerationWorker
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.time.Duration
 import java.time.LocalTime
@@ -30,6 +33,14 @@ class RecurrenceScheduler @Inject constructor(
                 ExistingPeriodicWorkPolicy.UPDATE,
                 worker,
             )
+    }
+
+    fun scheduleTaskRecurrence(taskId: Long) {
+        val worker = OneTimeWorkRequestBuilder<RecurrenceGenerationWorker>()
+            .setInputData(workDataOf("task_id" to taskId))
+            .build()
+
+        WorkManager.getInstance(context).enqueue(worker)
     }
 
     companion object {

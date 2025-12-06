@@ -1,14 +1,13 @@
 package com.costular.atomtasks.tasks.usecase
 
 import com.costular.atomtasks.core.Either
-import com.costular.atomtasks.tasks.fake.TaskToday
+import com.costular.atomtasks.tasks.helper.recurrence.RecurrenceScheduler
 import com.costular.atomtasks.tasks.model.UpdateTaskIsDoneError
 import com.costular.atomtasks.tasks.repository.TasksRepository
 import com.google.common.truth.Truth.assertThat
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
@@ -17,41 +16,62 @@ class UpdateTaskIsDoneUseCaseTest {
 
     lateinit var sut: UpdateTaskIsDoneUseCase
 
-    private val tasksRepository: TasksRepository = mockk()
+    private val tasksRepository: TasksRepository = mockk(relaxed = true)
+    private val recurrenceScheduler: RecurrenceScheduler = mockk(relaxed = true)
 
     @Before
     fun setUp() {
-        sut = UpdateTaskIsDoneUseCase(tasksRepository)
+        sut = UpdateTaskIsDoneUseCase(tasksRepository, recurrenceScheduler)
     }
 
     @Test
-    fun `Should call mark task repository method when invoke usecase`() = runTest {
+    fun `Should call mark task repository method and return success when invoke usecase`() = runTest {
         val taskId = 100L
         val isDone = true
 
-        sut(UpdateTaskIsDoneUseCase.Params(taskId, isDone))
+        val result = sut(UpdateTaskIsDoneUseCase.Params(taskId, isDone))
 
         coVerify { tasksRepository.markTask(taskId, isDone) }
+        assertThat(result).isEqualTo(Either.Result(Unit))
     }
 
     @Test
-    fun `Should return Either result when invoke usecase given repository returned success`() =
-        runTest {
-            coEvery { tasksRepository.markTask(1L, false) } returns Unit
-            coEvery { tasksRepository.getTaskById(1L) } returns flowOf(TaskToday)
+    fun `Should trigger recurrence scheduling and return success when task is marked as done`() = runTest {
+        val taskId = 100L
+        val isDone = true
 
-            val result = sut(UpdateTaskIsDoneUseCase.Params(1L, false))
+        val result = sut(UpdateTaskIsDoneUseCase.Params(taskId, isDone))
 
-            assertThat(result).isEqualTo(Either.Result(Unit))
-        }
+        coVerify { recurrenceScheduler.scheduleTaskRecurrence(taskId) }
+        assertThat(result).isEqualTo(Either.Result(Unit))
+    }
 
     @Test
-    fun `Should return Either error when invoke usecase given repostory threw an exception`() =
-        runTest {
-            coEvery { tasksRepository.markTask(1L, true) } throws Exception("")
+    fun `Should NOT trigger recurrence scheduling and return success when task is marked as NOT done`() = runTest {
+        val taskId = 100L
+        val isDone = false
 
-            val result = sut(UpdateTaskIsDoneUseCase.Params(1L, true))
+        val result = sut(UpdateTaskIsDoneUseCase.Params(taskId, isDone))
 
-            assertThat(result).isEqualTo(Either.Error(UpdateTaskIsDoneError.UnknownError))
-        }
+        coVerify(exactly = 0) { recurrenceScheduler.scheduleTaskRecurrence(any()) }
+        assertThat(result).isEqualTo(Either.Result(Unit))
+    }
+
+    @Test
+    fun `Should return error when repository fails`() = runTest {
+        coEvery { tasksRepository.markTask(any(), any()) } throws Exception("Boom")
+
+        val result = sut(UpdateTaskIsDoneUseCase.Params(1L, true))
+
+        assertThat(result).isEqualTo(Either.Error(UpdateTaskIsDoneError.UnknownError))
+    }
+
+    @Test
+    fun `Should return error when recurrence scheduler fails`() = runTest {
+        coEvery { recurrenceScheduler.scheduleTaskRecurrence(any()) } throws Exception("Scheduler Boom")
+
+        val result = sut(UpdateTaskIsDoneUseCase.Params(1L, true))
+
+        assertThat(result).isEqualTo(Either.Error(UpdateTaskIsDoneError.UnknownError))
+    }
 }

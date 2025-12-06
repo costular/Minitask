@@ -69,6 +69,7 @@ The codebase is modularized to separate concerns and improve build times:
 
 ## Coding Conventions
 *   **Style:** Follows the official Kotlin coding conventions.
+*   **Idiomatic Kotlin:** Prefer functional programming concepts (e.g., `map`, `filter`, `takeIf`, `let`) over imperative loops and early returns where readability is improved. Write idiomatic Kotlin code.
 *   **Architecture:** Adheres to Clean Architecture boundaries. Features should not depend on other features directly.
 *   **Testing:**
     *   **Unit Tests:** Required for logic.

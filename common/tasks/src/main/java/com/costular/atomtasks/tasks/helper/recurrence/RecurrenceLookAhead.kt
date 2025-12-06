@@ -16,5 +16,5 @@ object RecurrenceLookAhead {
     private const val DaysToCreate = 14
     private const val WeekdaysToCreate = 10
     private const val WeeksToCreate = 4
-    private const val YearsToCreate = 1
+    private const val YearsToCreate = 2
 }
