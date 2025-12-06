@@ -8,6 +8,10 @@ import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.getByType
 
+import org.gradle.api.tasks.testing.Test
+import org.gradle.kotlin.dsl.withType
+import org.gradle.kotlin.dsl.assign
+
 class AndroidLibraryConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
@@ -18,7 +22,11 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
 
             extensions.configure<LibraryExtension> {
                 configureKotlinAndroid(this)
-                defaultConfig.targetSdk = 34
+                defaultConfig.targetSdk = 36
+            }
+
+            tasks.withType<Test>().configureEach {
+                failOnNoDiscoveredTests = false
             }
 
             dependencies {

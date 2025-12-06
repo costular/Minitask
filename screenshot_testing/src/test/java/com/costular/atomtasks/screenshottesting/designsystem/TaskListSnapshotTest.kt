@@ -102,6 +102,7 @@ class TaskListSnapshotTest {
         }
     }
 
+    @Suppress("UnusedMaterial3ScaffoldPaddingParameter")
     @Composable
     private fun GeneratedTaskList(tasks: List<Task>) {
         Scaffold {

@@ -12,7 +12,7 @@ android {
 
 dependencies {
     api(project(":core"))
-    api(platform(libs.compose.bom.alpha))
+    api(platform(libs.compose.bom))
     api(libs.lifecycle.compose)
 
     implementation(libs.androidx.core)

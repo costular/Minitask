@@ -142,7 +142,7 @@
     <string name="onboarding_finish">Finish</string>
     <string name="onboarding_tasks_title">Your to-do list, simplified</string>
     <string name="onboarding_tasks_description">With Minitask, organize your tasks with a minimalist approach and no distractions. Just what you need, nothing more.</string>
-    <string name="onboarding_free_title">100% free and ad-free</string>
+    <string name="onboarding_free_title" formatted="false">100% free and ad-free</string>
     <string name="onboarding_free_description">Minitask is open-source, completely free, and ad-free. Use the app without limits, for life</string>
     <string name="onboarding_secure_title">Full privacy, your data is yours</string>
     <string name="onboarding_secure_description">Your tasks are stored only on your device. No cloud sync; you retain full control over your information.</string>

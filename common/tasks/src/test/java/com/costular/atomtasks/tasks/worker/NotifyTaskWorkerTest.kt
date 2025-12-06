@@ -44,6 +44,6 @@ class NotifyTaskWorkerTest {
 
         val workInfo = workManager.getWorkInfoById(request.id).get()
 
-        Truth.assertThat(workInfo.state).isEqualTo(WorkInfo.State.FAILED)
+        Truth.assertThat(workInfo!!.state).isEqualTo(WorkInfo.State.FAILED)
     }
 }

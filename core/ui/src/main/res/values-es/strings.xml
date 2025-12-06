@@ -114,7 +114,7 @@
     <string name="notification_daily_reminder_description">Haz clic aquí para organizar tus tareas del día</string>
     <string name="onboarding_tasks_title">Tu lista de tareas, simplificada</string>
     <string name="onboarding_tasks_description">Con Minitask, organiza tus tareas con una interfaz minimalista y sin distracciones. Todo lo que necesitas, nada más.</string>
-    <string name="onboarding_free_title">100% gratis y sin anuncios</string>
+    <string name="onboarding_free_title" formatted="false">100% gratis y sin anuncios</string>
     <string name="onboarding_free_description">Minitask es de código abierto, totalmente gratuito y sin publicidad. Usa la app sin límites, de por vida.</string>
     <string name="onboarding_secure_title">Privacidad total, tus datos son tuyos</string>
     <string name="onboarding_secure_description">Tus tareas se almacenan solo en tu dispositivo. Sin sincronización en la nube, mantienes el control total de tu información.</string>

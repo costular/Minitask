@@ -20,7 +20,7 @@ class AndroidApplicationConventionPlugin : Plugin<Project> {
                 configureFlavors(this)
                 configureBuildTypes(this)
                 configureAndroidCompose(this)
-                defaultConfig.targetSdk = 34
+                defaultConfig.targetSdk = 36
             }
         }
     }
