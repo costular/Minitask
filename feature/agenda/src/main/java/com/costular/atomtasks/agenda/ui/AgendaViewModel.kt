@@ -33,6 +33,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.LocalDate
 import javax.inject.Inject
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
@@ -103,8 +104,11 @@ class AgendaViewModel @Inject constructor(
         atomAnalytics.track(NavigateToDay(localDate.toString()))
     }
 
+    private var loadTasksJob: Job? = null
+
     fun loadTasks() {
-        viewModelScope.launch {
+        loadTasksJob?.cancel()
+        loadTasksJob = viewModelScope.launch {
             observeTasksUseCase.invoke(ObserveTasksUseCase.Params(day = state.value.selectedDay.date))
                 .onStart { setState { copy(tasks = TasksState.Loading) } }
                 .collect {
