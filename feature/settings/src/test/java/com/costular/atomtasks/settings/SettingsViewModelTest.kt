@@ -10,6 +10,7 @@ import com.costular.atomtasks.data.settings.SetThemeUseCase
 import com.costular.atomtasks.data.settings.Theme
 import com.costular.atomtasks.data.settings.dailyreminder.ObserveDailyReminderUseCase
 import com.costular.atomtasks.data.settings.dailyreminder.UpdateDailyReminderUseCase
+import com.costular.atomtasks.tasks.usecase.AreExactRemindersAvailable
 import com.google.common.truth.Truth.assertThat
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -33,6 +34,7 @@ class SettingsViewModelTest : MviViewModelTest() {
     private val atomAnalytics: AtomAnalytics = mockk(relaxed = true)
     private val getDailyReminderUseCase: ObserveDailyReminderUseCase = mockk(relaxed = true)
     private val updateDailyReminder: UpdateDailyReminderUseCase = mockk(relaxed = true)
+    private val areExactRemindersAvailable: AreExactRemindersAvailable = mockk(relaxed = true)
 
     @Before
     fun setUp() {
@@ -40,6 +42,7 @@ class SettingsViewModelTest : MviViewModelTest() {
     }
 
     private fun initialize() {
+        coEvery { areExactRemindersAvailable(Unit) } returns true
         sut = SettingsViewModel(
             getThemeUseCase = getThemeUseCase,
             setThemeUseCase = setThemeUseCase,
@@ -48,6 +51,7 @@ class SettingsViewModelTest : MviViewModelTest() {
             atomAnalytics = atomAnalytics,
             getDailyReminderUseCase = getDailyReminderUseCase,
             updateDailyReminderUseCase = updateDailyReminder,
+            areExactRemindersAvailable = areExactRemindersAvailable,
         )
     }
 
