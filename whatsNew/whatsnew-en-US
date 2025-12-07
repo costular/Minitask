@@ -1,5 +1,3 @@
-- Improved task detail screen
-- Daily notification to remind adding the day's tasks
-- Enhanced task postponement screen
-- Moved the "today" button to the top bar
-- Fixed task sorting
+- Fixed several bugs related to recurring tasks.
+- Fixed an issue with the agenda where incorrect data was occasionally displayed.
+- Various other improvements.

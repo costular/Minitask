@@ -1,5 +1,3 @@
-- Mejorada la pantalla de detalle de tarea
-- Notificación diaria para recordar añadir las tareas del día
-- Mejorada la pantalla de posponer tarea
-- Se ha movido el botón de "hoy" a la barra superior
-- Se ha arreglado ordenar las tareas
+- Se solucionan bastanes errores relacionados con las tareas recurrentes
+- Se aregla un error relacionado con la agenda, mostrando datos erróneos en ocasiones
+- Otras mejoras varias
