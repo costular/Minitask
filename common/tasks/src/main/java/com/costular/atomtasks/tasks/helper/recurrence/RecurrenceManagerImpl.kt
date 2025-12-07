@@ -29,7 +29,7 @@ class RecurrenceManagerImpl @Inject constructor(
                 val aheadTasksCountForType = numberOfOccurrencesForType(task.recurrenceType!!)
                 val futureOccurrencesFromNow = tasksRepository.numberFutureOccurrences(
                     effectiveParentId,
-                    LocalDate.of(2025, 12, 16)
+                    LocalDate.now(),
                 )
 
                 if (futureOccurrencesFromNow < aheadTasksCountForType) {
