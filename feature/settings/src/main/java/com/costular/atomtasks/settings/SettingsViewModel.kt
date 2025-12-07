@@ -22,7 +22,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.time.LocalTime
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "TooManyFunctions")
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val getThemeUseCase: GetThemeUseCase,
@@ -45,7 +45,12 @@ class SettingsViewModel @Inject constructor(
     private fun checkExactAlarmPermission() {
         viewModelScope.launch {
             val isAvailable = areExactRemindersAvailable(Unit)
-            setState { copy(shouldShowExactAlarmRationale = !isAvailable && state.value.dailyReminder?.isEnabled == true) }
+            setState {
+                copy(
+                    shouldShowExactAlarmRationale = !isAvailable &&
+                            state.value.dailyReminder?.isEnabled == true
+                )
+            }
         }
     }
 
@@ -95,7 +100,7 @@ class SettingsViewModel @Inject constructor(
             if (!isAvailable) {
                 setState { copy(shouldShowExactAlarmRationale = true) }
             }
-            
+
             val dailyReminder = state.value.dailyReminder ?: return@launch
 
             updateDailyReminderUseCase(
@@ -131,10 +136,10 @@ class SettingsViewModel @Inject constructor(
     fun exactAlarmPermissionChanged() {
         // Re-check permission logic if needed or just dismiss
         viewModelScope.launch {
-             val isAvailable = areExactRemindersAvailable(Unit)
-             if (isAvailable) {
-                 setState { copy(shouldShowExactAlarmRationale = false) }
-             }
+            val isAvailable = areExactRemindersAvailable(Unit)
+            if (isAvailable) {
+                setState { copy(shouldShowExactAlarmRationale = false) }
+            }
         }
     }
 

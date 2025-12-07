@@ -75,6 +75,7 @@ The codebase is modularized to separate concerns and improve build times:
     *   **Unit Tests:** Required for logic.
     *   **Snapshot Tests:** Used for UI components (Jetpack Compose).
     *   **Integration Tests:** Located in `src/androidTest`.
+*   **End-of-File Newline:** All source files must end with a single newline character.
 *   **Commits:** Use imperative mood (e.g., "Fix bug", "Add feature").
 
 ## Notes for Gemini

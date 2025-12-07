@@ -20,8 +20,8 @@ class RecurrenceGenerationWorker @AssistedInject constructor(
         val taskId = inputData.getLong("task_id", -1L)
 
         return try {
-            if (taskId == -1L) {
-                throw IllegalArgumentException("Task id has not been passed")
+            require(taskId == -1L) {
+                "Task id has not been passed"
             }
 
             recurrenceManager.createAheadForTask(taskId)
