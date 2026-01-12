@@ -15,6 +15,11 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
+import java.time.temporal.ChronoUnit
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.costular.atomtasks.agenda.actions.TaskActionsResult
@@ -199,7 +204,34 @@ fun AgendaScreen(
         )
     }
 
-    Column {
+    val initialDate = remember { LocalDate.now() }
+    val startIndex = Int.MAX_VALUE / 2
+    val initialPage = remember(initialDate, state.selectedDay) {
+        startIndex + ChronoUnit.DAYS.between(initialDate, state.selectedDay.date).toInt()
+    }
+
+    val pagerState = rememberPagerState(
+        initialPage = initialPage,
+        pageCount = { Int.MAX_VALUE }
+    )
+
+    LaunchedEffect(pagerState) {
+        snapshotFlow { pagerState.currentPage }.collect { page ->
+            val newDate = initialDate.plusDays(page - startIndex.toLong())
+            if (newDate != state.selectedDay.date) {
+                onSelectDate(newDate)
+            }
+        }
+    }
+
+    LaunchedEffect(state.selectedDay) {
+        val targetPage = startIndex + ChronoUnit.DAYS.between(initialDate, state.selectedDay.date).toInt()
+        if (targetPage != pagerState.currentPage) {
+            pagerState.scrollToPage(targetPage)
+        }
+    }
+
+    Column(modifier = Modifier.fillMaxSize()) {
         AgendaHeader(
             selectedDay = state.selectedDay,
             onSelectDate = onSelectDate,
@@ -210,16 +242,31 @@ fun AgendaScreen(
             modifier = Modifier.fillMaxWidth(),
         )
 
-        TasksContent(
-            state = state,
-            onOpenTask = openTaskDetail,
-            onMarkTask = onMarkTask,
-            modifier = Modifier.supportWideScreen(),
-            onDragStopped = onDragStopped,
-            onDragTask = onDragTask,
-            onDeleteTask = onDeleteTask,
-            onClickTaskMore = openTaskAction,
-        )
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.weight(1f),
+            verticalAlignment = Alignment.Top,
+        ) { page ->
+            val pageDate = initialDate.plusDays(page - startIndex.toLong())
+
+            if (pageDate == state.selectedDay.date) {
+                // This prevents adjacent days to show duplicated tasks while loading
+                // Even though it's very unlikely to happen due to the local database, it's good
+                // having this protection
+                TasksContent(
+                    state = state,
+                    onOpenTask = openTaskDetail,
+                    onMarkTask = onMarkTask,
+                    modifier = Modifier.supportWideScreen(),
+                    onDragStopped = onDragStopped,
+                    onDragTask = onDragTask,
+                    onDeleteTask = onDeleteTask,
+                    onClickTaskMore = openTaskAction,
+                )
+            } else {
+                Box(modifier = Modifier.fillMaxSize())
+            }
+        }
     }
 }
 
