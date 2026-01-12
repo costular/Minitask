@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">MiniTask</string>
+    <string name="app_name">Miniask</string>
     <string name="error_generic">¡Oh no! algo falló :(</string>
     <string name="ok">Vale</string>
     <string name="cancel">Cancelar</string>
