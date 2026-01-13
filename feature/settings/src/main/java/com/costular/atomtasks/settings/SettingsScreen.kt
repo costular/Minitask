@@ -68,7 +68,7 @@ object EmptySettingsNavigator : SettingsNavigator {
     override fun navigateToSelectTheme(theme: String) = Unit
 }
 
-private const val DEFAULT_BACKUP_FILENAME = "minitask_backup.json"
+private const val DefaultBackupFilename = "minitask_backup.json"
 
 @Destination<SettingsGraph>(
     start = true,
@@ -111,7 +111,7 @@ fun SettingsScreen(
         onUpdateAutoforwardTasks = viewModel::setAutoforwardTasksEnabled,
         onEnableDailyReminder = viewModel::updateDailyReminder,
         onClickDailyReminder = viewModel::clickOnDailyReminderTimePicker,
-        onBackupLocal = { createDocumentLauncher.launch(DEFAULT_BACKUP_FILENAME) },
+        onBackupLocal = { createDocumentLauncher.launch(DefaultBackupFilename) },
         onRestoreLocal = { openDocumentLauncher.launch(arrayOf("application/json")) },
     )
 }
