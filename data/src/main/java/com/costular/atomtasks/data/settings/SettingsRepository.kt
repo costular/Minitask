@@ -11,4 +11,7 @@ interface SettingsRepository {
     suspend fun setMoveUndoneTaskTomorrow(isEnabled: Boolean)
     fun getDailyReminderConfiguration(): Flow<DailyReminder>
     suspend fun updateDailyReminder(isEnabled: Boolean, time: LocalTime)
+
+    fun observeHasUserCreatedTask(): Flow<Boolean>
+    suspend fun setHasUserCreatedTask(hasCreated: Boolean)
 }

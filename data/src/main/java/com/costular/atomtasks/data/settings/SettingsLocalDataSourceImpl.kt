@@ -60,6 +60,18 @@ class SettingsLocalDataSourceImpl @Inject constructor(
         }
     }
 
+    private val preferenceHasUserCreatedTask = booleanPreferencesKey("user_created_task")
+
+    override fun observeHasUserCreatedTask(): Flow<Boolean> = dataStore.data.map { preferences ->
+        preferences[preferenceHasUserCreatedTask] ?: false
+    }
+
+    override suspend fun setHasUserCreatedTask(hasCreated: Boolean) {
+        dataStore.edit { settings ->
+            settings[preferenceHasUserCreatedTask] = hasCreated
+        }
+    }
+
     private companion object {
         const val DefaultMoveUndoneTasks = false
     }

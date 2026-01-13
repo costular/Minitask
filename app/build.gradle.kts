@@ -32,6 +32,8 @@ android {
             // for JNA and JNA-platform
             resources.excludes.add("META-INF/AL2.0")
             resources.excludes.add("META-INF/LGPL2.1")
+            resources.excludes.add("META-INF/INDEX.LIST")
+            resources.excludes.add("META-INF/DEPENDENCIES")
             // for byte-buddy
             resources.excludes.add("META-INF/licenses/ASM")
             resources.pickFirsts.add("win32-x86-64/attach_hotspot_windows.dll")

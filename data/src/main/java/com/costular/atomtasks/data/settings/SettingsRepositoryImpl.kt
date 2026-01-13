@@ -31,4 +31,11 @@ class SettingsRepositoryImpl @Inject constructor(
     override suspend fun updateDailyReminder(isEnabled: Boolean, time: LocalTime) {
         settingsLocalDataSource.updateDailyReminder(isEnabled, time)
     }
+
+    override fun observeHasUserCreatedTask(): Flow<Boolean> =
+        settingsLocalDataSource.observeHasUserCreatedTask()
+
+    override suspend fun setHasUserCreatedTask(hasCreated: Boolean) {
+        settingsLocalDataSource.setHasUserCreatedTask(hasCreated)
+    }
 }

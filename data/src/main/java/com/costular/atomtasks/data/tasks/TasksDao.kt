@@ -133,4 +133,13 @@ interface TasksDao {
 
     @Query("SELECT COUNT(*) from tasks WHERE is_done = 1")
     suspend fun getDoneTasksCount(): Int
+
+    @Query("SELECT * FROM tasks")
+    suspend fun getAllTasksRaw(): List<TaskEntity>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun addAll(tasks: List<TaskEntity>)
+
+    @Query("DELETE FROM tasks")
+    suspend fun deleteAll()
 }

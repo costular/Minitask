@@ -126,4 +126,13 @@
     <string name="settings_tasks_daily_reminder_title">Recordatorio diario</string>
     <string name="settings_tasks_daily_reminder_description">Un recordatorio rápido para ayudarte a organizar tu día</string>
     <string name="settings_tasks_daily_reminder_time_label">Elige la hora del recordatorio</string>
+    <string name="settings_backup_title">Copia de seguridad</string>
+    <string name="settings_backup_local_export">Exportar a archivo</string>
+    <string name="settings_backup_local_import">Importar desde archivo</string>
+    <string name="settings_backup_import_confirm_positive">Restaurar</string>
+    <string name="settings_backup_success">Copia de seguridad hecha con éxito</string>
+    <string name="settings_restore_success">Copia de seguridad restaurada con éxito</string>
+    <string name="settings_backup_loading">Procesando…</string>
+    <string name="settings_backup_import_confirm_title">Restaurar copia de seguridad?</string>
+    <string name="settings_backup_import_confirm_message">¡Importante! La restauración eliminará las tareas actuales y las reemplazará por la copia de seguridad. Esta acción no se puede deshacer.</string>
 </resources>

@@ -25,4 +25,13 @@ interface ReminderDao {
 
     @Update
     suspend fun update(reminderEntity: ReminderEntity)
+
+    @Query("SELECT * FROM reminders")
+    suspend fun getAllReminders(): List<ReminderEntity>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun addAll(reminders: List<ReminderEntity>)
+
+    @Query("DELETE FROM reminders")
+    suspend fun deleteAll()
 }

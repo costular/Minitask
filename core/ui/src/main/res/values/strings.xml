@@ -148,4 +148,13 @@
     <string name="onboarding_secure_description">Your tasks are stored only on your device. No cloud sync; you retain full control over your information.</string>
     <string name="onboarding_notifications_title">Never miss an important task</string>
     <string name="onboarding_notifications_description">Enable notifications to receive reminders and stay on top of your tasks. Keep up with your goals effortlessly.</string>
+    <string name="settings_backup_title">Backup &amp; Restore</string>
+    <string name="settings_backup_local_export">Export to file</string>
+    <string name="settings_backup_local_import">Import from file</string>
+    <string name="settings_backup_import_confirm_title">Restore Backup?</string>
+    <string name="settings_backup_import_confirm_message">This will replace all current tasks with the backup data. This action cannot be undone.</string>
+    <string name="settings_backup_import_confirm_positive">Restore</string>
+    <string name="settings_backup_success">Backup created successfully</string>
+    <string name="settings_restore_success">Backup restored successfully</string>
+    <string name="settings_backup_loading">Processing…</string>
 </resources>

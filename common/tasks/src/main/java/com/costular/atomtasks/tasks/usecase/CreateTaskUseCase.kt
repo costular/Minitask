@@ -3,6 +3,7 @@ package com.costular.atomtasks.tasks.usecase
 import com.costular.atomtasks.core.Either
 import com.costular.atomtasks.core.logging.atomLog
 import com.costular.atomtasks.core.usecase.UseCase
+import com.costular.atomtasks.data.settings.SettingsRepository
 import com.costular.atomtasks.tasks.helper.TaskReminderManager
 import com.costular.atomtasks.tasks.model.CreateTaskError
 import com.costular.atomtasks.tasks.model.RecurrenceType
@@ -15,6 +16,7 @@ class CreateTaskUseCase @Inject constructor(
     private val tasksRepository: TasksRepository,
     private val taskReminderManager: TaskReminderManager,
     private val populateRecurringTasksUseCase: PopulateRecurringTasksUseCase,
+    private val settingsRepository: SettingsRepository,
 ) : UseCase<CreateTaskUseCase.Params, Either<CreateTaskError, Unit>> {
 
     data class Params(
@@ -40,6 +42,8 @@ class CreateTaskUseCase @Inject constructor(
             }
 
             populateRecurringTasksUseCase(PopulateRecurringTasksUseCase.Params(taskId)) // TODO handle error handling
+
+            settingsRepository.setHasUserCreatedTask(true)
 
             Either.Result(Unit)
         } catch (e: Exception) {
