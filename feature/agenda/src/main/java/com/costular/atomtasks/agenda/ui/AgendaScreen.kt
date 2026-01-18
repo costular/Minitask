@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import java.time.temporal.ChronoUnit
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -215,10 +216,12 @@ fun AgendaScreen(
         pageCount = { Int.MAX_VALUE }
     )
 
+    val currentSelectedDay by rememberUpdatedState(state.selectedDay)
+
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.currentPage }.collect { page ->
             val newDate = initialDate.plusDays(page - startIndex.toLong())
-            if (newDate != state.selectedDay.date) {
+            if (newDate != currentSelectedDay.date) {
                 onSelectDate(newDate)
             }
         }
