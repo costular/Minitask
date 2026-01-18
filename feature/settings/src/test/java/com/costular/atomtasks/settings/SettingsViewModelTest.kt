@@ -21,6 +21,11 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
 
+import com.costular.atomtasks.data.backup.ExportBackupUseCase
+import com.costular.atomtasks.data.backup.HasDataUseCase
+import com.costular.atomtasks.data.backup.ImportBackupUseCase
+import android.content.Context
+
 @ExperimentalTime
 class SettingsViewModelTest : MviViewModelTest() {
 
@@ -35,6 +40,10 @@ class SettingsViewModelTest : MviViewModelTest() {
     private val getDailyReminderUseCase: ObserveDailyReminderUseCase = mockk(relaxed = true)
     private val updateDailyReminder: UpdateDailyReminderUseCase = mockk(relaxed = true)
     private val areExactRemindersAvailable: AreExactRemindersAvailable = mockk(relaxed = true)
+    private val exportBackupUseCase: ExportBackupUseCase = mockk(relaxed = true)
+    private val importBackupUseCase: ImportBackupUseCase = mockk(relaxed = true)
+    private val hasDataUseCase: HasDataUseCase = mockk(relaxed = true)
+    private val context: Context = mockk(relaxed = true)
 
     @Before
     fun setUp() {
@@ -52,6 +61,10 @@ class SettingsViewModelTest : MviViewModelTest() {
             getDailyReminderUseCase = getDailyReminderUseCase,
             updateDailyReminderUseCase = updateDailyReminder,
             areExactRemindersAvailable = areExactRemindersAvailable,
+            exportBackupUseCase = exportBackupUseCase,
+            importBackupUseCase = importBackupUseCase,
+            hasDataUseCase = hasDataUseCase,
+            context = context,
         )
     }
 

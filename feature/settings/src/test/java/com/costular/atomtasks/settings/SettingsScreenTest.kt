@@ -85,9 +85,12 @@ class SettingsScreenTest : ComposeProvider {
             SettingsScreen(
                 state = state,
                 navigator = EmptySettingsNavigator,
+                snackbarHostState = androidx.compose.material3.SnackbarHostState(),
                 onUpdateAutoforwardTasks = onUpdateAutoforwardTasks,
                 onEnableDailyReminder = {},
                 onClickDailyReminder = {},
+                onBackupLocal = {},
+                onRestoreLocal = {},
             )
         }
     }
