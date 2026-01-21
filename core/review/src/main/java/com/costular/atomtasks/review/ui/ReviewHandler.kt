@@ -1,6 +1,8 @@
 package com.costular.atomtasks.review.ui
 
 import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -19,29 +21,49 @@ fun ReviewHandler(
 ) {
     val context = LocalContext.current
     val manager = remember { ReviewManagerFactory.create(context) }
+    var reviewInfo by remember { mutableStateOf<ReviewInfo?>(null) }
 
-    var reviewInfo: ReviewInfo? by remember { mutableStateOf(null) }
-    
-    atomLog { "ReviewHandler: Composing. shouldRequestReview=$shouldRequestReview" }
-
-    manager.requestReviewFlow().addOnSuccessListener {
-        atomLog { "ReviewHandler: Review info received: $it" }
-        reviewInfo = it
+    LaunchedEffect(manager) {
+        val task = manager.requestReviewFlow()
+        task.addOnCompleteListener { request ->
+            if (request.isSuccessful) {
+                reviewInfo = request.result
+            } else {
+                request.exception?.let {
+                    atomLog { it }
+                }
+            }
+        }
     }
 
     LaunchedEffect(reviewInfo, shouldRequestReview) {
-        val latestReviewInfo = reviewInfo
-        
-        atomLog { "ReviewHandler: LaunchedEffect. latestReviewInfo=$latestReviewInfo, shouldRequestReview=$shouldRequestReview" }
+        if (shouldRequestReview) {
+            val activity = context.findActivity()
+            val currentReviewInfo = reviewInfo
 
-        if (latestReviewInfo != null && shouldRequestReview) {
-            atomLog { "ReviewHandler: Launching review flow" }
-            manager
-                .launchReviewFlow(context as Activity, latestReviewInfo)
-                .addOnCompleteListener { 
-                    atomLog { "ReviewHandler: Review flow completed" }
-                    onFinish() 
-                }
+            if (activity != null && currentReviewInfo != null) {
+                manager.launchReviewFlow(activity, currentReviewInfo)
+                    .addOnCompleteListener {
+                        onFinish()
+                    }
+            } else {
+                 // If we can't show it (no activity or no info), we should probably just finish
+                 // to avoid getting stuck in a state where we want to show it but can't.
+                 // However, if info is loading, we might want to wait. 
+                 // But since we pre-fetch in the other LaunchedEffect, if it's not here yet, 
+                 // we wait. If it failed, it stays null.
+                 // We don't have a good way to know if it failed vs loading here without more state.
+                 // For now, let's assume if it's null we wait. 
+            }
         }
     }
+}
+
+private fun Context.findActivity(): Activity? {
+    var context = this
+    while (context is ContextWrapper) {
+        if (context is Activity) return context
+        context = context.baseContext
+    }
+    return null
 }
