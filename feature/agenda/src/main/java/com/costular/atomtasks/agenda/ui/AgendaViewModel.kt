@@ -140,9 +140,10 @@ class AgendaViewModel @Inject constructor(
             val result = shouldShowAskReviewUseCase(Unit)
             result.fold(
                 ifError = {
-                    // do nothing for now
+                    atomLog { "AgendaViewModel: shouldShowAskReviewUseCase failed" }
                 },
                 ifResult = {
+                    atomLog { "AgendaViewModel: shouldShowReviewDialog=$it" }
                     setState { copy(shouldShowReviewDialog = it) }
                 }
             )
