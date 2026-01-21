@@ -20,9 +20,9 @@ class ReviewStrategyImplTest {
     }
 
     @Test
-    fun `Should return true when executed given completed tasks are equal or higher than 15`() =
+    fun `Should return true when executed given completed tasks are equal or higher than 10`() =
         runTest {
-            coEvery { tasksDao.getDoneTasksCount() } returns 16
+            coEvery { tasksDao.getDoneTasksCount() } returns 11
 
             val result = sut.shouldShowReview()
 
@@ -30,8 +30,8 @@ class ReviewStrategyImplTest {
         }
 
     @Test
-    fun `Should return false when executed given completed tasks are lower than 15`() = runTest {
-        coEvery { tasksDao.getDoneTasksCount() } returns 14
+    fun `Should return false when executed given completed tasks are lower than 10`() = runTest {
+        coEvery { tasksDao.getDoneTasksCount() } returns 9
 
         val result = sut.shouldShowReview()
 

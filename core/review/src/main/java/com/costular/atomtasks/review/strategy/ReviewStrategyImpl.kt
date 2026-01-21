@@ -11,6 +11,6 @@ class ReviewStrategyImpl @Inject constructor(
     }
 
     private companion object {
-        const val MINIMUM_DONE_TASKS = 15
+        const val MINIMUM_DONE_TASKS = 10
     }
 }
