@@ -1,3 +1,6 @@
+import org.gradle.api.JavaVersion
+import org.gradle.jvm.toolchain.JavaLanguageVersion
+
 plugins {
     `kotlin-dsl`
 }
@@ -5,8 +8,13 @@ plugins {
 group = "com.costular.atomtasks.buildlogic"
 
 java {
+    toolchain.languageVersion.set(JavaLanguageVersion.of(17))
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
+}
+
+kotlin {
+    jvmToolchain(17)
 }
 
 dependencies {

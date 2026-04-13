@@ -9,8 +9,8 @@ import com.costular.atomtasks.core.logging.AtomLogger
 import com.costular.atomtasks.core.logging.FirebaseAtomLogger
 import com.costular.atomtasks.core.logging.LogcatAtomLogger
 import com.costular.atomtasks.tasks.helper.AutoforwardManager
-import com.google.firebase.crashlytics.ktx.crashlytics
-import com.google.firebase.ktx.Firebase
+import com.google.firebase.Firebase
+import com.google.firebase.crashlytics.crashlytics
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 

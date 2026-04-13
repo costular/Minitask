@@ -1,9 +1,5 @@
 plugins {
     id("atomtasks.android.feature")
-    id("atomtasks.android.library")
-    id("atomtasks.android.library.compose")
-    id("atomtasks.android.library.ksp")
-    id("kotlin-android")
     alias(libs.plugins.ksp)
     id("atomtasks.detekt")
     id("atomtasks.android.library.jacoco")
@@ -22,7 +18,6 @@ dependencies {
     implementation(projects.core.analytics)
     implementation(projects.common.tasks)
     implementation(project(mapOf("path" to ":feature:agenda")))
-    ksp(libs.hilt.compiler)
     ksp(libs.compose.destinations.ksp)
     implementation(libs.compose.ui.manifest)
     implementation(libs.calendar)

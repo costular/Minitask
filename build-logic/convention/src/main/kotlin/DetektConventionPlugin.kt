@@ -28,10 +28,10 @@ class DetektConventionPlugin : Plugin<Project> {
             }
 
             tasks.withType<Detekt>().configureEach {
-                jvmTarget = "1.8"
+                jvmTarget = "21"
             }
             tasks.withType<DetektCreateBaselineTask>().configureEach {
-                jvmTarget = "1.8"
+                jvmTarget = "21"
             }
         }
     }

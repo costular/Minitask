@@ -1,4 +1,4 @@
-import com.android.build.gradle.LibraryExtension
+import com.android.build.api.dsl.LibraryExtension
 import com.costular.atomtasks.configureKotlinAndroid
 import com.costular.atomtasks.libs
 import org.gradle.api.Plugin
@@ -22,7 +22,6 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
 
             extensions.configure<LibraryExtension> {
                 configureKotlinAndroid(this)
-                defaultConfig.targetSdk = 36
             }
 
             tasks.withType<Test>().configureEach {

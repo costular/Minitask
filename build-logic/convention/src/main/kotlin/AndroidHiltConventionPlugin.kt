@@ -18,8 +18,14 @@ class AndroidHiltConventionPlugin : Plugin<Project> {
                 "kspTest"(libs.findLibrary("hilt.compiler").get())
             }
 
-            pluginManager.withPlugin("com.android.base") {
-                pluginManager.apply("dagger.hilt.android.plugin")
+            pluginManager.withPlugin("com.android.application") {
+                pluginManager.apply("com.google.dagger.hilt.android")
+            }
+            pluginManager.withPlugin("com.android.library") {
+                pluginManager.apply("com.google.dagger.hilt.android")
+            }
+            pluginManager.withPlugin("com.android.test") {
+                pluginManager.apply("com.google.dagger.hilt.android")
             }
         }
     }

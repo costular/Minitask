@@ -1,42 +1,53 @@
 [versions]
-kotlin = "2.2.21"
+kotlin = "2.3.20"
 coroutines = "1.10.2"
-agp = "8.13.0"
+agp = "9.1.0"
 
-core = "1.17.0"
+core = "1.18.0"
 appCompat = "1.7.1"
 lifecycle = "2.10.0"
 viewModelCompose = "2.10.0"
-mockk = "1.14.6"
-hilt = "2.57.2"
+mockk = "1.14.9"
+hilt = "2.59.2"
 hiltAndroidx = "1.3.0"
-testRunner = "1.6.1"
+testRunner = "1.7.0"
 testJetpack = "2.2.0"
 composeMaterial3 = "1.4.0"
 accompanist = "0.37.3"
-workManager = "2.11.0"
+workManager = "2.11.2"
 room = "2.8.4"
 paparazzi = "2.0.0-alpha02"
 composeDestinations = "2.3.0"
-junit5 = "5.13.4"
+junit5 = "6.0.3"
 firebaseCrashlyticsPlugin = "3.0.3"
+googleServices = "4.4.4"
+firebaseCrashlyticsGradle = "3.0.7"
 
-ksp = "2.3.0"
-jacoco = "0.8.12"
-androidxComposeBom = "2025.12.00"
-chrisBanesComposeBom = "2023.04.00-beta02"
+ksp = "2.3.6"
+jacoco = "0.8.14"
+androidxComposeBom = "2026.03.01"
 reordeable = "3.0.0"
 collectionsImmutable = "0.4.0"
 junit = "4.13.2"
 androidx-test-ext-junit = "1.3.0"
 espresso-core = "3.7.0"
-benchmarkBaselineProfileGradlePlugin = "1.4.1"
+benchmarkBaselineProfileGradlePlugin = "1.5.0-alpha04"
 uiautomator = "2.3.0"
-benchmarkMacroJunit4 = "1.4.1"
+benchmarkMacroJunit4 = "1.5.0-alpha03"
 profileinstaller = "1.4.1"
 playReview = "2.0.2"
-kotlinxSerialization = "1.9.0"
+kotlinxSerialization = "1.11.0"
 material = "1.13.0"
+preferences = "1.2.1"
+preferencesDatastore = "1.2.1"
+composeActivity = "1.13.0"
+calendar = "2.10.1"
+firebaseBom = "34.12.0"
+truth = "1.7.0"
+androidDesugarJdk = "2.1.5"
+robolectric = "4.16.1"
+testParameterInjector = "1.22"
+detekt = "1.23.8"
 
 [libraries]
 coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
@@ -48,15 +59,14 @@ hilt = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
 hilt-core = { module = "com.google.dagger:hilt-core", version.ref = "hilt" }
 hilt-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hilt" }
 hilt-ext-compiler = { group = "androidx.hilt", name = "hilt-compiler", version.ref = "hiltAndroidx" }
-hilt-navigation-compose = "androidx.hilt:hilt-navigation-compose:1.3.0"
-hilt-work = "androidx.hilt:hilt-work:1.3.0"
+hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hiltAndroidx" }
+hilt-work = { group = "androidx.hilt", name = "hilt-work", version.ref = "hiltAndroidx" }
 hilt-android-testing = { module = "com.google.dagger:hilt-android-testing", version.ref = "hilt" }
 startup = "androidx.startup:startup-runtime:1.2.0"
-preferences = "androidx.preference:preference-ktx:1.2.1"
-preferences-datastore = "androidx.datastore:datastore-preferences:1.1.7"
+preferences = { group = "androidx.preference", name = "preference-ktx", version.ref = "preferences" }
+preferences-datastore = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "preferencesDatastore" }
 compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "androidxComposeBom" }
-compose-bom-alpha = { module = "dev.chrisbanes.compose:compose-bom", version.ref = "chrisBanesComposeBom" }
-compose-activity = "androidx.activity:activity-compose:1.9.3"
+compose-activity = { group = "androidx.activity", name = "activity-compose", version.ref = "composeActivity" }
 compose-ui = { module = "androidx.compose.ui:ui" }
 compose-foundation = { module = "androidx.compose.foundation:foundation" }
 compose-layout = { module = "androidx.compose.foundation:foundation-layout" }
@@ -76,11 +86,11 @@ room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
 room-testing = { group = "androidx.room", name = "room-testing", version.ref = "room" }
-calendar = "com.kizitonwose.calendar:compose:2.9.0"
-android-junit = "androidx.test.ext:junit-ktx:1.3.0"
-firebase-bom = "com.google.firebase:firebase-bom:33.5.1"
-firebase-analytics = { module = "com.google.firebase:firebase-analytics-ktx" }
-firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics-ktx" }
+calendar = { group = "com.kizitonwose.calendar", name = "compose", version.ref = "calendar" }
+android-junit = { group = "androidx.test.ext", name = "junit-ktx", version.ref = "androidx-test-ext-junit" }
+firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
+firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
+firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
 firebase-config = { module = "com.google.firebase:firebase-config" }
 compose-destinations-core = { module = "io.github.raamcosta.compose-destinations:core", version.ref = "composeDestinations" }
 compose-destinations-ksp = { module = "io.github.raamcosta.compose-destinations:ksp", version.ref = "composeDestinations" }
@@ -88,25 +98,27 @@ compose-destinations-bottomsheet = { module = "io.github.raamcosta.compose-desti
 reordeable = { group = "sh.calvin.reorderable", name = "reorderable", version.ref = "reordeable" }
 kotlinx-serialization = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
 
-play-review = {  group = "com.google.android.play", name = "review-ktx", version.ref = "playReview" }
+play-review = { group = "com.google.android.play", name = "review-ktx", version.ref = "playReview" }
 
-junit = "junit:junit:4.13.2"
+junit = { group = "junit", name = "junit", version.ref = "junit" }
 coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 mockk-android = { module = "io.mockk:mockk-android", version.ref = "mockk" }
-truth = "androidx.test.ext:truth:1.7.0"
+truth = { group = "androidx.test.ext", name = "truth", version.ref = "truth" }
 androidx-test = { module = "androidx.arch.core:core-testing", version.ref = "testJetpack" }
 turbine = "app.cash.turbine:turbine:1.2.1"
 androidx-test-runner = { module = "androidx.test:runner", version.ref = "testRunner" }
 androidx-test-rules = { module = "androidx.test:rules", version.ref = "testRunner" }
-android-desugarjdk = "com.android.tools:desugar_jdk_libs:2.1.3"
-robolectric = "org.robolectric:robolectric:4.12"
-testparameterinjector = "com.google.testparameterinjector:test-parameter-injector:1.13"
+android-desugarjdk = { group = "com.android.tools", name = "desugar_jdk_libs", version.ref = "androidDesugarJdk" }
+robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
+testparameterinjector = { group = "com.google.testparameterinjector", name = "test-parameter-injector", version.ref = "testParameterInjector" }
 kotlinx-collections-immutable = { group = "org.jetbrains.kotlinx", name = "kotlinx-collections-immutable", version.ref = "collectionsImmutable" }
 
 androidGradle = { group = "com.android.tools.build", name = "gradle", version.ref = "agp" }
 kotlinGradle = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
-detektGradle = "io.gitlab.arturbosch.detekt:detekt-gradle-plugin:1.23.6"
+detektGradle = { group = "io.gitlab.arturbosch.detekt", name = "detekt-gradle-plugin", version.ref = "detekt" }
+google-services-gradle = { group = "com.google.gms", name = "google-services", version.ref = "googleServices" }
+firebase-crashlytics-gradle = { group = "com.google.firebase", name = "firebase-crashlytics-gradle", version.ref = "firebaseCrashlyticsGradle" }
 junit-junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-test-ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidx-test-ext-junit" }
 espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espresso-core" }

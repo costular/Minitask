@@ -1,10 +1,6 @@
 plugins {
     id("atomtasks.android.feature")
-    id("atomtasks.android.library")
-    id("atomtasks.android.library.compose")
     alias(libs.plugins.ksp)
-    id("atomtasks.android.library.ksp")
-    id("kotlin-android")
     id("kotlin-parcelize")
     id("atomtasks.detekt")
     id("atomtasks.android.library.jacoco")
@@ -12,20 +8,10 @@ plugins {
 }
 
 android {
-    android {
-        namespace = "com.costular.atomtasks.feature.agenda"
-    }
+    namespace = "com.costular.atomtasks.feature.agenda"
 
     ksp {
         arg("compose-destinations.moduleName", "agenda")
-    }
-
-    libraryVariants.all {
-        kotlin.sourceSets {
-            getByName(name) {
-                kotlin.srcDir("build/generated/ksp/$name/kotlin")
-            }
-        }
     }
 
     packaging {

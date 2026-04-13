@@ -1,7 +1,7 @@
 plugins {
     id("atomtasks.android.library")
     id("atomtasks.detekt")
-    alias(libs.plugins.ksp)
+    id("atomtasks.android.hilt")
 }
 
 android {
@@ -10,8 +10,5 @@ android {
 
 dependencies {
     api(libs.coroutines)
-    implementation(libs.hilt)
-    ksp(libs.hilt.compiler)
-
     testImplementation(libs.truth)
 }

@@ -1,4 +1,4 @@
-import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
+import com.android.build.api.dsl.ApplicationExtension
 import com.costular.atomtasks.configureAndroidCompose
 import com.costular.atomtasks.configureBuildTypes
 import com.costular.atomtasks.configureFlavors
@@ -15,7 +15,7 @@ class AndroidApplicationConventionPlugin : Plugin<Project> {
             apply(plugin = "org.jetbrains.kotlin.android")
             apply(plugin = "org.jetbrains.kotlin.plugin.compose")
 
-            extensions.configure<BaseAppModuleExtension> {
+            extensions.configure<ApplicationExtension> {
                 configureKotlinAndroid(this)
                 configureFlavors(this)
                 configureBuildTypes(this)

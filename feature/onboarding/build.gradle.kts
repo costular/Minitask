@@ -1,9 +1,5 @@
 plugins {
     id("atomtasks.android.feature")
-    id("atomtasks.android.library")
-    id("atomtasks.android.library.compose")
-    id("atomtasks.android.library.ksp")
-    id("kotlin-android")
     alias(libs.plugins.ksp)
     id("atomtasks.detekt")
     id("atomtasks.android.library.jacoco")
@@ -15,13 +11,6 @@ android {
 
     ksp {
         arg("compose-destinations.moduleName", "onboarding")
-    }
-    libraryVariants.all {
-        kotlin.sourceSets {
-            getByName(name) {
-                kotlin.srcDir("build/generated/ksp/$name/kotlin")
-            }
-        }
     }
 }
 

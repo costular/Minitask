@@ -1,8 +1,5 @@
 plugins {
     id("atomtasks.android.feature")
-    id("atomtasks.android.library")
-    id("atomtasks.android.library.compose")
-    id("atomtasks.android.library.ksp")
     alias(libs.plugins.ksp)
     id("atomtasks.detekt")
     id("atomtasks.android.library.jacoco")
@@ -10,17 +7,7 @@ plugins {
 }
 
 android {
-    android {
-        namespace = "com.costular.atomtasks.feature.postponetask"
-    }
-
-    libraryVariants.all {
-        kotlin.sourceSets {
-            getByName(name) {
-                kotlin.srcDir("build/generated/ksp/$name/kotlin")
-            }
-        }
-    }
+    namespace = "com.costular.atomtasks.feature.postponetask"
 
     packaging {
         resources.excludes.add("META-INF/LICENSE.md")
@@ -57,4 +44,3 @@ dependencies {
     androidTestImplementation(libs.mockk.android)
     debugImplementation(libs.compose.ui.manifest)
 }
-

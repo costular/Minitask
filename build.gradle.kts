@@ -5,8 +5,8 @@ buildscript {
         maven("https://plugins.gradle.org/m2/")
     }
     dependencies {
-        classpath("com.google.gms:google-services:4.4.2")
-        classpath("com.google.firebase:firebase-crashlytics-gradle:3.0.2")
+        classpath(libs.google.services.gradle)
+        classpath(libs.firebase.crashlytics.gradle)
         classpath(libs.androidx.benchmark.baseline.profile.gradle.plugin)
     }
 }

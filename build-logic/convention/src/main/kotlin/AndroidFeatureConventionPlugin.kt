@@ -1,11 +1,11 @@
+import com.android.build.api.dsl.LibraryExtension
+import com.costular.atomtasks.configureAndroidCompose
+import com.costular.atomtasks.configureKotlinAndroid
+import com.costular.atomtasks.libs
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.artifacts.VersionCatalogsExtension
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
-import org.gradle.kotlin.dsl.getByType
-import com.android.build.gradle.LibraryExtension
-import com.costular.atomtasks.libs
 
 class AndroidFeatureConventionPlugin : Plugin<Project> {
 
@@ -14,17 +14,13 @@ class AndroidFeatureConventionPlugin : Plugin<Project> {
             pluginManager.apply {
                 apply("com.android.library")
                 apply("org.jetbrains.kotlin.android")
+                apply("org.jetbrains.kotlin.plugin.compose")
             }
             extensions.configure<LibraryExtension>() {
-                defaultConfig {
-                    testInstrumentationRunner = "com.costular.atomtasks.core.testing.AtomTestRunner"
-                }
-
-                testOptions {
-                    unitTests {
-                        isIncludeAndroidResources = true
-                    }
-                }
+                configureKotlinAndroid(this)
+                configureAndroidCompose(this)
+                defaultConfig.testInstrumentationRunner =
+                    "com.costular.atomtasks.core.testing.AtomTestRunner"
             }
 
             dependencies {

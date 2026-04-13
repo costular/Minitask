@@ -2,14 +2,13 @@ import com.costular.atomtasks.Versioning
 
 plugins {
     id("atomtasks.android.application")
+    id("atomtasks.android.hilt")
     id("kotlin-parcelize")
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
-    id("dagger.hilt.android.plugin")
     id("atomtasks.detekt")
     id("jacoco")
     alias(libs.plugins.ksp)
-    id("com.android.application")
     id("androidx.baselineprofile")
 }
 
@@ -98,9 +97,7 @@ dependencies {
     implementation(libs.appcompat)
     implementation(libs.lifecycle.compose)
     implementation(libs.viewmodel)
-    implementation(libs.hilt)
     implementation(libs.profileinstaller)
-    ksp(libs.hilt.compiler)
     implementation(libs.hilt.work)
     implementation(libs.hilt.navigation.compose)
     implementation(libs.startup)

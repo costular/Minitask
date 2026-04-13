@@ -1,6 +1,5 @@
 plugins {
     id("atomtasks.android.library")
-    id("kotlin-android")
     id("atomtasks.detekt")
     id("atomtasks.android.library.jacoco")
     id("atomtasks.android.hilt")
@@ -13,6 +12,7 @@ android {
 dependencies {
     implementation(project(":core"))
     implementation(project(":data"))
+    implementation(platform(libs.compose.bom))
 
     implementation(libs.hilt.android.testing)
     implementation(libs.androidx.test.runner)

@@ -3,13 +3,13 @@ package com.costular.atomtasks.analytics.providers
 import android.os.Bundle
 import com.costular.atomtasks.analytics.AtomAnalytics
 import com.costular.atomtasks.analytics.TrackingEvent
+import com.google.firebase.Firebase
 import com.google.firebase.analytics.FirebaseAnalytics
-import com.google.firebase.analytics.ktx.analytics
-import com.google.firebase.ktx.Firebase
+import com.google.firebase.analytics.analytics
 import javax.inject.Inject
 
 
-class FirebaseAnalyticsProvider @Inject constructor(): AtomAnalytics {
+class FirebaseAnalyticsProvider @Inject constructor() : AtomAnalytics {
 
     private val firebaseAnalytics: FirebaseAnalytics by lazy {
         Firebase.analytics

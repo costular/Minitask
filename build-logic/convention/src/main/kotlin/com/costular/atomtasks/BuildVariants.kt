@@ -1,10 +1,8 @@
 package com.costular.atomtasks
 
 import com.android.build.api.dsl.ApplicationExtension
-import com.android.build.api.dsl.ApplicationProductFlavor
-import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.ProductFlavor
-import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
+import com.android.build.api.dsl.TestExtension
 
 enum class FlavorDimension(
     val naming: String
@@ -28,42 +26,57 @@ enum class AtomBuildType(val applicationIdSuffix: String? = null) {
 }
 
 fun configureFlavors(
-    commonExtensions: CommonExtension<*, *, *, *, *, *>,
+    applicationExtension: ApplicationExtension,
     flavorConfigurationBlock: ProductFlavor.(atomFlavor: AtomFlavor) -> Unit = {},
 ) {
-    commonExtensions.apply {
-        flavorDimensions += FlavorDimension.Environment.naming
-        productFlavors {
-            AtomFlavor.values().forEach { flavor ->
-                create(flavor.naming) {
-                    dimension = flavor.dimension.naming
-                    flavorConfigurationBlock(this, flavor)
-                    if (this@apply is ApplicationExtension && this is ApplicationProductFlavor) {
-                        flavor.applicationIdSuffix?.let {
-                            applicationIdSuffix = it
-                        }
-                    }
-                }
+    applicationExtension.flavorDimensions += FlavorDimension.Environment.naming
+    applicationExtension.productFlavors {
+        AtomFlavor.values().forEach { flavor ->
+            create(flavor.naming) {
+                dimension = flavor.dimension.naming
+                flavorConfigurationBlock(this, flavor)
+                flavor.applicationIdSuffix?.let { applicationIdSuffix = it }
             }
         }
     }
 }
 
-fun configureBuildTypes(baseAppModuleExtension: BaseAppModuleExtension) {
-    with(baseAppModuleExtension) {
+fun configureFlavors(
+    testExtension: TestExtension,
+    flavorConfigurationBlock: ProductFlavor.(atomFlavor: AtomFlavor) -> Unit = {},
+) {
+    testExtension.flavorDimensions += FlavorDimension.Environment.naming
+    testExtension.productFlavors {
+        AtomFlavor.values().forEach { flavor ->
+            create(flavor.naming) {
+                dimension = flavor.dimension.naming
+                flavorConfigurationBlock(this, flavor)
+            }
+        }
+    }
+}
+
+fun configureBuildTypes(applicationExtension: ApplicationExtension) {
+    with(applicationExtension) {
         buildTypes {
             val release = getByName("release") {
                 isDebuggable = false
                 isMinifyEnabled = true
                 isShrinkResources = true
-                proguardFiles(getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro")
+                proguardFiles(
+                    getDefaultProguardFile("proguard-android-optimize.txt"),
+                    "proguard-rules.pro",
+                )
                 applicationIdSuffix = AtomBuildType.RELEASE.applicationIdSuffix
             }
             getByName("debug") {
                 isDebuggable = true
                 isMinifyEnabled = false
                 isShrinkResources = false
-                proguardFiles(getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro")
+                proguardFiles(
+                    getDefaultProguardFile("proguard-android-optimize.txt"),
+                    "proguard-rules.pro",
+                )
                 applicationIdSuffix = AtomBuildType.DEBUG.applicationIdSuffix
             }
             create("benchmark") {

@@ -46,8 +46,8 @@ android {
         )
     }
 
-    testOptions.managedDevices.devices {
-        create<ManagedVirtualDevice>("pixel6Api34") {
+    testOptions.managedDevices.localDevices {
+        create("pixel6Api34") {
             device = "Pixel 6"
             apiLevel = 34
             systemImageSource = "google"
