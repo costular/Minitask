@@ -52,6 +52,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
@@ -377,7 +378,10 @@ private fun ColumnScope.TaskDateSection(
         icon = Icons.Outlined.CalendarToday,
         onClick = onSelectDate,
         content = {
-            Text(text = dayAsText(localDate))
+            Text(
+                text = dayAsText(localDate),
+                fontWeight = FontWeight.SemiBold,
+            )
         },
         hasValue = true,
         modifier = Modifier.fillMaxWidth()
@@ -398,7 +402,10 @@ private fun ColumnScope.TaskReminderSection(
         onClick = onSelectReminder,
         content = {
             AnimatedContent(text, label = "Reminder") {
-                Text(text = it)
+                Text(
+                    text = it,
+                    fontWeight = if (reminder != null) FontWeight.SemiBold else FontWeight.Normal,
+                )
             }
         },
         isClearable = reminder != null,
@@ -419,7 +426,10 @@ private fun ColumnScope.TaskRecurrenceSection(
         onClick = onSelectRecurrence,
         onClear = onClearRecurrence,
         content = {
-            Text(text = recurrenceType.localized())
+            Text(
+                text = recurrenceType.localized(),
+                fontWeight = if (recurrenceType != null) FontWeight.SemiBold else FontWeight.Normal,
+            )
         },
         hasValue = recurrenceType != null,
         modifier = Modifier.fillMaxWidth()
@@ -472,9 +482,9 @@ fun Field(
     onClear: () -> Unit = {},
 ) {
     val contentColor = if (hasValue) {
-        MaterialTheme.colorScheme.secondary
+        MaterialTheme.colorScheme.primary
     } else {
-        MaterialTheme.colorScheme.onSurface
+        MaterialTheme.colorScheme.onSurfaceVariant
     }
 
     ListItem(
@@ -496,6 +506,7 @@ fun Field(
         },
         headlineContent = content,
         colors = ListItemDefaults.colors(
+            containerColor = MaterialTheme.colorScheme.surface,
             headlineColor = contentColor,
             leadingIconColor = contentColor,
             trailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
