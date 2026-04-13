@@ -42,13 +42,8 @@ class TaskNotificationManagerImpl @Inject constructor(
 
     override fun remindTask(taskId: Long, taskName: String) {
         val builder = context.buildNotificationBase(NotificationChannels.Reminders)
-            .setContentTitle(context.getString(R.string.notification_reminder))
-            .setContentText(taskName)
+            .applyTaskReminderContent(taskName)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setStyle(
-                NotificationCompat.BigTextStyle()
-                    .bigText(taskName),
-            )
             .openAppContentIntent(context)
             .setAutoCancel(true)
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
@@ -120,4 +115,14 @@ class TaskNotificationManagerImpl @Inject constructor(
         const val MARK_TASK_AS_DONE_RECEIVER =
             "com.costular.atomtasks.tasks.receiver.MarkTaskAsDoneReceiver"
     }
+}
+
+internal fun NotificationCompat.Builder.applyTaskReminderContent(
+    taskName: String,
+): NotificationCompat.Builder = apply {
+    setContentTitle(taskName)
+    setStyle(
+        NotificationCompat.BigTextStyle()
+            .bigText(taskName),
+    )
 }
