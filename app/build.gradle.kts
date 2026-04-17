@@ -119,6 +119,8 @@ dependencies {
     testImplementation(libs.androidx.test)
     testImplementation(libs.mockk)
     testImplementation(libs.compose.ui.test)
+    testImplementation(libs.work.testing)
+    testImplementation(libs.robolectric)
 
     androidTestImplementation(projects.core.testing)
 
