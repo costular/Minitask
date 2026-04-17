@@ -34,6 +34,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
@@ -52,12 +53,10 @@ import com.costular.designsystem.theme.AppTheme
 import com.costular.designsystem.theme.AtomTheme
 import java.time.LocalDate
 import java.time.LocalTime
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.ReorderableLazyListState
 import sh.calvin.reorderable.rememberReorderableLazyListState
-
-private const val MillisecondsToResetSwipeBoxState = 1000L
 
 @Composable
 fun TaskList(
@@ -118,6 +117,7 @@ private fun LazyItemScope.TaskItem(
     val view = LocalView.current
     val dismissState = rememberSwipeToDismissBoxState()
     val interactionSource = remember { MutableInteractionSource() }
+    val coroutineScope = rememberCoroutineScope()
 
     ReorderableItem(state, key = task.id) { isDragging ->
         SwipeToDismissBox(
@@ -127,13 +127,15 @@ private fun LazyItemScope.TaskItem(
             backgroundContent = {
                 TaskRemoveBackground(dismissState)
             },
+            onDismiss = { direction ->
+                if (direction == SwipeToDismissBoxValue.EndToStart) {
+                    onDeleteTask(task)
+                    coroutineScope.launch {
+                        dismissState.reset()
+                    }
+                }
+            },
         ) {
-            when (dismissState.currentValue) {
-                SwipeToDismissBoxValue.EndToStart -> onDeleteTask(task)
-                SwipeToDismissBoxValue.StartToEnd -> Unit
-                SwipeToDismissBoxValue.Settled -> Unit
-            }
-
             TaskCard(
                 title = task.name,
                 onMark = { onMarkTask(task.id, it) },
@@ -175,13 +177,6 @@ private fun TaskRemoveBackground(
 
     val swipeTargetValue by remember {
         derivedStateOf { state.targetValue }
-    }
-
-    if (state.currentValue != SwipeToDismissBoxValue.Settled) {
-        LaunchedEffect(Unit) {
-            delay(MillisecondsToResetSwipeBoxState)
-            state.reset()
-        }
     }
 
     LaunchedEffect(swipeTargetValue) {

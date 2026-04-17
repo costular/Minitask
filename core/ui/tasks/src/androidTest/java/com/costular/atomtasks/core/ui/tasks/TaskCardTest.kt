@@ -15,7 +15,7 @@ class TaskCardTest : AndroidTest() {
 
     @Test
     fun shouldCallMarkCallback_whenTapOnMarkable() {
-        val onMarkCallback: () -> Unit = mockk(relaxed = true)
+        val onMarkCallback: (Boolean) -> Unit = mockk(relaxed = true)
 
         composeTestRule.setContent {
             TaskCard(
@@ -33,7 +33,7 @@ class TaskCardTest : AndroidTest() {
             .performClick()
 
         verify {
-            onMarkCallback()
+            onMarkCallback(true)
         }
     }
 
