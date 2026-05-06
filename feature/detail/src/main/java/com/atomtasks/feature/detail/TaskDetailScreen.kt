@@ -257,6 +257,7 @@ private fun TaskDetailContent(
     onSave: () -> Unit,
     onMarkTask: (Boolean) -> Unit,
     onDelete: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val focusRequester = remember { FocusRequester() }
 
@@ -265,7 +266,7 @@ private fun TaskDetailContent(
     }
 
     Surface(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
     ) {
         Box {
             Column(

@@ -20,7 +20,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import com.costular.atomtasks.core.ui.AppSnackbarHostEffect
+import com.costular.atomtasks.core.ui.rememberAppSnackbarState
 import com.costular.atomtasks.core.ui.DestinationsScaffold
+import com.costular.atomtasks.core.ui.SnackbarController
 import com.costular.atomtasks.ui.AppNavigation
 import com.costular.designsystem.theme.AtomTheme
 import com.ramcosta.composedestinations.generated.agenda.destinations.AgendaScreenDestination
@@ -51,6 +54,12 @@ private fun Home(
 ) {
     val (fabOnClick, setFabOnClick) = remember { mutableStateOf<(() -> Unit)?>(null) }
     val currentDestination = atomAppState.currentDestination
+    val snackbarState = rememberAppSnackbarState()
+
+    AppSnackbarHostEffect(
+        appSnackbarState = snackbarState,
+        snackbarController = SnackbarController,
+    )
 
     NavigationSuiteScaffold(
         navigationSuiteItems = {
@@ -76,6 +85,7 @@ private fun Home(
     ) {
         DestinationsScaffold(
             navController = atomAppState.navController,
+            snackbarHostState = snackbarState.hostState,
             floatingActionButton = {
                 AddTaskFloatingActionButton(
                     shouldBeShown = currentDestination == AgendaScreenDestination,

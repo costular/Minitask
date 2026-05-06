@@ -1,5 +1,7 @@
 package com.costular.atomtasks.agenda.ui
 
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -9,30 +11,28 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.snapshotFlow
-import java.time.temporal.ChronoUnit
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.costular.atomtasks.agenda.actions.TaskActionsResult
+import com.costular.atomtasks.core.ui.R
 import com.costular.atomtasks.core.ui.mvi.EventObserver
 import com.costular.atomtasks.core.ui.tasks.ItemPosition
+import com.costular.atomtasks.core.ui.tasks.TaskList
 import com.costular.atomtasks.core.ui.utils.DevicesPreview
 import com.costular.atomtasks.review.ui.ReviewHandler
 import com.costular.atomtasks.tasks.model.Reminder
-import com.costular.atomtasks.tasks.removal.RecurringRemovalStrategy
 import com.costular.atomtasks.tasks.model.Task
-import com.costular.atomtasks.core.ui.tasks.TaskList
 import com.costular.atomtasks.tasks.removal.RemoveTaskConfirmationUiHandler
+import com.costular.atomtasks.tasks.removal.RecurringRemovalStrategy
 import com.costular.designsystem.components.CircularLoadingIndicator
 import com.costular.designsystem.dialogs.DatePickerDialog
 import com.costular.designsystem.theme.AppTheme
@@ -44,6 +44,7 @@ import com.ramcosta.composedestinations.result.NavResult
 import com.ramcosta.composedestinations.result.ResultRecipient
 import java.time.LocalDate
 import java.time.LocalTime
+import java.time.temporal.ChronoUnit
 import kotlinx.collections.immutable.persistentListOf
 
 const val TestTagHeader = "AgendaTitle"
@@ -234,7 +235,9 @@ fun AgendaScreen(
         }
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+    ) {
         AgendaHeader(
             selectedDay = state.selectedDay,
             onSelectDate = onSelectDate,

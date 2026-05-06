@@ -17,6 +17,7 @@
     <string name="agenda_edit_task">Editar</string>
     <string name="agenta_delete_task">Eliminar</string>
     <string name="agenda_create_new_task">Nueva tarea</string>
+    <string name="undo">Deshacer</string>
     <string name="agenda_edit_title">Editar tarea</string>
     <string name="today">Hoy</string>
     <string name="create_task_set_recurrence">Repetir</string>
@@ -49,6 +50,13 @@
     <string name="task_detail_discard_changes_description">Tienes cambios sin guardar. Si sales, perderás todos los cambios realizados. ¿Quieres continuar sin guardar?</string>
     <string name="task_detail_discard_changes_positive">Descartar</string>
     <string name="task_detail_discard_changes_negative">Cancelar</string>
+    <string name="task_feedback_created">Tarea creada</string>
+    <string name="task_feedback_updated">Tarea actualizada</string>
+    <string name="task_feedback_completed">Tarea completada</string>
+    <string name="task_feedback_reopened">Tarea reabierta</string>
+    <string name="task_feedback_deleted">Tarea eliminada</string>
+    <string name="task_feedback_deleted_future">Esta tarea y las siguientes se han eliminado</string>
+    <string name="task_feedback_deleted_all">Todas las tareas periódicas se han eliminado</string>
     <string name="notification_channel_reminders_title">Recordatorios</string>
     <string name="notification_channel_reminders_description">Recordatorios de tus tareas</string>
     <string name="notification_reminder">🔔 Recordatorio</string>

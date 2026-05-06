@@ -22,14 +22,10 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -80,7 +76,6 @@ fun SettingsScreen(
 ) {
     val viewModel: SettingsViewModel = hiltViewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
 
     resultRecipient.onNavResult {
@@ -88,8 +83,6 @@ fun SettingsScreen(
             viewModel.setTheme(Theme.fromString(theme))
         }
     }
-
-    SettingsEvents(viewModel, state, snackbarHostState, context)
 
     val (createDocumentLauncher, openDocumentLauncher) = rememberBackupLaunchers(viewModel)
 
@@ -107,7 +100,6 @@ fun SettingsScreen(
     SettingsScreen(
         state = state,
         navigator = navigator,
-        snackbarHostState = snackbarHostState,
         onUpdateAutoforwardTasks = viewModel::setAutoforwardTasksEnabled,
         onEnableDailyReminder = viewModel::updateDailyReminder,
         onClickDailyReminder = viewModel::clickOnDailyReminderTimePicker,
@@ -123,7 +115,6 @@ fun SettingsScreen(
     scrollState: ScrollState = rememberScrollState(),
     state: SettingsState,
     navigator: SettingsNavigator,
-    snackbarHostState: SnackbarHostState,
     onUpdateAutoforwardTasks: (Boolean) -> Unit,
     onEnableDailyReminder: (Boolean) -> Unit,
     onClickDailyReminder: () -> Unit,
@@ -132,7 +123,6 @@ fun SettingsScreen(
 ) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             AtomTopBar(
                 title = {
@@ -241,7 +231,6 @@ private fun SettingsScreenPreview() {
         SettingsScreen(
             state = SettingsState(),
             navigator = EmptySettingsNavigator,
-            snackbarHostState = remember { SnackbarHostState() },
             onUpdateAutoforwardTasks = {},
             onEnableDailyReminder = {},
             onClickDailyReminder = {},
@@ -320,32 +309,6 @@ private fun SettingsDialogs(
 }
 
 @Composable
-private fun SettingsEvents(
-    viewModel: SettingsViewModel,
-    state: SettingsState,
-    snackbarHostState: SnackbarHostState,
-    context: android.content.Context,
-) {
-    LaunchedEffect(state.backupProcessState) {
-        when (val processState = state.backupProcessState) {
-            is BackupProcessState.Success -> {
-                val message = when (processState.type) {
-                    BackupOperationType.BACKUP -> context.getString(R.string.settings_backup_success)
-                    BackupOperationType.RESTORE -> context.getString(R.string.settings_restore_success)
-                }
-                snackbarHostState.showSnackbar(message)
-                viewModel.dismissBackupResult()
-            }
-            is BackupProcessState.Error -> {
-                snackbarHostState.showSnackbar(processState.message ?: "Error")
-                viewModel.dismissBackupResult()
-            }
-            else -> Unit
-        }
-    }
-}
-
-@Composable
 private fun rememberBackupLaunchers(
     viewModel: SettingsViewModel,
 ): Pair<ActivityResultLauncher<String>, ActivityResultLauncher<Array<String>>> {
@@ -363,7 +326,5 @@ private fun rememberBackupLaunchers(
 
     return createDocumentLauncher to openDocumentLauncher
 }
-
-
 
 

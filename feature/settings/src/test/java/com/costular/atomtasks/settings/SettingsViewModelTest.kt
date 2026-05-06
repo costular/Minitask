@@ -3,6 +3,7 @@ package com.costular.atomtasks.settings
 import app.cash.turbine.test
 import com.costular.atomtasks.analytics.AtomAnalytics
 import com.costular.atomtasks.core.testing.MviViewModelTest
+import com.costular.atomtasks.core.ui.SnackbarManager
 import com.costular.atomtasks.data.settings.GetThemeUseCase
 import com.costular.atomtasks.data.settings.IsAutoforwardTasksSettingEnabledUseCase
 import com.costular.atomtasks.data.settings.SetAutoforwardTasksInteractor
@@ -44,6 +45,7 @@ class SettingsViewModelTest : MviViewModelTest() {
     private val importBackupUseCase: ImportBackupUseCase = mockk(relaxed = true)
     private val hasDataUseCase: HasDataUseCase = mockk(relaxed = true)
     private val context: Context = mockk(relaxed = true)
+    private val snackbarManager: SnackbarManager = mockk(relaxed = true)
 
     @Before
     fun setUp() {
@@ -64,6 +66,7 @@ class SettingsViewModelTest : MviViewModelTest() {
             exportBackupUseCase = exportBackupUseCase,
             importBackupUseCase = importBackupUseCase,
             hasDataUseCase = hasDataUseCase,
+            snackbarManager = snackbarManager,
             context = context,
         )
     }

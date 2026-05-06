@@ -29,6 +29,7 @@
     <string name="agenda_mark_as_undone">Mark as undone</string>
     <string name="agenda_create_new_task">New task</string>
     <string name="agenda_tutorial_task_order">Want your tasks in order? Long press and drag!</string>
+    <string name="undo">Undo</string>
     <string name="today">Today</string>
     <string name="task_recurrence_never">Does not repeat</string>
     <string name="task_recurrence_daily">Repeats every day</string>
@@ -69,6 +70,13 @@
     <string name="task_detail_discard_changes_description">You have unsaved changes. If you exit, all changes will be lost. Do you want to continue without saving?</string>
     <string name="task_detail_discard_changes_positive">Discard</string>
     <string name="task_detail_discard_changes_negative">Cancel</string>
+    <string name="task_feedback_created">Task created</string>
+    <string name="task_feedback_updated">Task updated</string>
+    <string name="task_feedback_completed">Task completed</string>
+    <string name="task_feedback_reopened">Task reopened</string>
+    <string name="task_feedback_deleted">Task deleted</string>
+    <string name="task_feedback_deleted_future">This and following tasks deleted</string>
+    <string name="task_feedback_deleted_all">All recurring tasks deleted</string>
 
     <string name="notification_channel_reminders_title">Reminders</string>
     <string name="notification_channel_reminders_description">Reminders for your tasks</string>

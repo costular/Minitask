@@ -13,6 +13,9 @@ import com.costular.atomtasks.agenda.analytics.AgendaAnalytics.OrderTask
 import com.costular.atomtasks.agenda.analytics.AgendaAnalytics.SelectToday
 import com.costular.atomtasks.agenda.analytics.AgendaAnalytics.ShowConfirmDeleteDialog
 import com.costular.atomtasks.analytics.AtomAnalytics
+import com.costular.atomtasks.core.ui.AppSnackbarMessage
+import com.costular.atomtasks.core.ui.R
+import com.costular.atomtasks.core.ui.SnackbarManager
 import com.costular.atomtasks.core.ui.date.asDay
 import com.costular.atomtasks.core.ui.mvi.MviViewModel
 import com.costular.atomtasks.core.ui.tasks.ItemPosition
@@ -25,9 +28,9 @@ import com.costular.atomtasks.tasks.helper.AutoforwardManager
 import com.costular.atomtasks.tasks.helper.recurrence.RecurrenceScheduler
 import com.costular.atomtasks.tasks.removal.RecurringRemovalStrategy
 import com.costular.atomtasks.tasks.removal.RemoveTaskConfirmationUiState
+import com.costular.atomtasks.tasks.removal.RemoveTaskUseCase
 import com.costular.atomtasks.tasks.usecase.MoveTaskUseCase
 import com.costular.atomtasks.tasks.usecase.ObserveTasksUseCase
-import com.costular.atomtasks.tasks.removal.RemoveTaskUseCase
 import com.costular.atomtasks.tasks.usecase.UpdateTaskIsDoneUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.LocalDate
@@ -52,8 +55,8 @@ class AgendaViewModel @Inject constructor(
     private val shouldShowAskReviewUseCase: ShouldAskReviewUseCase,
     private val recurrenceScheduler: RecurrenceScheduler,
     private val shouldShowOnboardingUseCase: ShouldShowOnboardingUseCase,
+    private val snackbarManager: SnackbarManager,
 ) : MviViewModel<AgendaState>(AgendaState()) {
-
     init {
         shouldShowOnboarding()
         loadTasks()
@@ -116,23 +119,37 @@ class AgendaViewModel @Inject constructor(
                         ifError = {
                             setState { copy(tasks = TasksState.Failure) }
                         },
-                        ifResult = {
-                            setState { copy(tasks = TasksState.Success(it.toImmutableList())) }
-                        })
+                        ifResult = { tasks ->
+                            setState { copy(tasks = TasksState.Success(tasks.toImmutableList())) }
+                        }
+                    )
                 }
         }
     }
 
     fun onMarkTask(taskId: Long, isDone: Boolean) = viewModelScope.launch {
-        updateTaskIsDoneUseCase(UpdateTaskIsDoneUseCase.Params(taskId, isDone))
-        checkIfReviewShouldBeShown(isDone)
+        updateTaskIsDoneUseCase(UpdateTaskIsDoneUseCase.Params(taskId, isDone)).fold(
+            ifError = {
+                sendGenericError()
+            },
+            ifResult = {
+                checkIfReviewShouldBeShown(isDone)
+                showSnackbar(
+                    if (isDone) {
+                        R.string.task_feedback_completed
+                    } else {
+                        R.string.task_feedback_reopened
+                    }
+                )
 
-        val event = if (isDone) {
-            MarkTaskAsDone
-        } else {
-            MarkTaskAsNotDone
-        }
-        atomAnalytics.track(event)
+                val event = if (isDone) {
+                    MarkTaskAsDone
+                } else {
+                    MarkTaskAsNotDone
+                }
+                atomAnalytics.track(event)
+            }
+        )
     }
 
     private suspend fun checkIfReviewShouldBeShown(isDone: Boolean) {
@@ -140,7 +157,7 @@ class AgendaViewModel @Inject constructor(
             val result = shouldShowAskReviewUseCase(Unit)
             result.fold(
                 ifError = {
-                    // do nothing for now
+                    Unit
                 },
                 ifResult = {
                     setState { copy(shouldShowReviewDialog = it) }
@@ -162,26 +179,23 @@ class AgendaViewModel @Inject constructor(
 
         val task = tasks.data.find { it.id == id }
         setState {
-            copy(removeTaskConfirmationUiState = RemoveTaskConfirmationUiState.Shown(id, task?.isRecurring ?: false))
+            copy(
+                removeTaskConfirmationUiState = RemoveTaskConfirmationUiState.Shown(
+                    taskId = id,
+                    isRecurring = task?.isRecurring == true,
+                )
+            )
         }
 
         atomAnalytics.track(ShowConfirmDeleteDialog)
     }
 
     fun deleteTask(id: Long) {
-        viewModelScope.launch {
-            hideAskDelete()
-            removeTaskUseCase(RemoveTaskUseCase.Params(id))
-        }
-
-        atomAnalytics.track(ConfirmDelete)
+        deleteTaskConfirmed(taskId = id, strategy = null)
     }
 
     fun deleteRecurringTask(id: Long, recurringRemovalStrategy: RecurringRemovalStrategy) {
-        viewModelScope.launch {
-            removeTaskUseCase(RemoveTaskUseCase.Params(id, recurringRemovalStrategy))
-            hideAskDelete()
-        }
+        deleteTaskConfirmed(taskId = id, strategy = recurringRemovalStrategy)
     }
 
     fun onDragTask(from: ItemPosition, to: ItemPosition) {
@@ -209,14 +223,14 @@ class AgendaViewModel @Inject constructor(
 
     fun onDragStopped() {
         viewModelScope.launch {
-            val state = state.value
+            val currentState = state.value
 
-            if (state.tasks is TasksState.Success && state.fromToPositions != null) {
+            if (currentState.tasks is TasksState.Success && currentState.fromToPositions != null) {
                 moveTaskUseCase(
                     MoveTaskUseCase.Params(
-                        day = state.selectedDay.date,
-                        fromPosition = state.fromToPositions.first,
-                        toPosition = state.fromToPositions.second
+                        day = currentState.selectedDay.date,
+                        fromPosition = currentState.fromToPositions.first,
+                        toPosition = currentState.fromToPositions.second,
                     ),
                 )
             }
@@ -234,13 +248,13 @@ class AgendaViewModel @Inject constructor(
     }
 
     fun toggleHeader() {
-        val state = state.value
+        val currentState = state.value
 
         setState {
             copy(isHeaderExpanded = !isHeaderExpanded)
         }
 
-        if (state.isHeaderExpanded) {
+        if (currentState.isHeaderExpanded) {
             atomAnalytics.track(CollapseCalendar)
         } else {
             atomAnalytics.track(ExpandCalendar)
@@ -264,6 +278,48 @@ class AgendaViewModel @Inject constructor(
 
     private fun hideAskDelete() {
         setState { copy(removeTaskConfirmationUiState = RemoveTaskConfirmationUiState.Hidden) }
+    }
+
+    private fun deleteTaskConfirmed(
+        taskId: Long,
+        strategy: RecurringRemovalStrategy?,
+    ) {
+        hideAskDelete()
+        viewModelScope.launch {
+            removeTaskUseCase(
+                RemoveTaskUseCase.Params(
+                    taskId = taskId,
+                    strategy = strategy,
+                )
+            ).fold(
+                ifError = {
+                    sendGenericError()
+                },
+                ifResult = {
+                    showSnackbar(deleteMessageFor(strategy))
+                    atomAnalytics.track(ConfirmDelete)
+                }
+            )
+        }
+    }
+
+    private fun deleteMessageFor(strategy: RecurringRemovalStrategy?): Int = when (strategy) {
+        RecurringRemovalStrategy.SINGLE_AND_FUTURE_ONES -> R.string.task_feedback_deleted_future
+        RecurringRemovalStrategy.FUTURE_ONES -> R.string.task_feedback_deleted_future
+        RecurringRemovalStrategy.ALL -> R.string.task_feedback_deleted_all
+        RecurringRemovalStrategy.SINGLE, null -> R.string.task_feedback_deleted
+    }
+
+    private fun sendGenericError() {
+        showSnackbar(R.string.error_generic)
+    }
+
+    private fun showSnackbar(messageRes: Int) {
+        snackbarManager.showMessage(
+            AppSnackbarMessage(
+                messageRes = messageRes,
+            )
+        )
     }
 
     fun onCreateTask() {

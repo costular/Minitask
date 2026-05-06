@@ -6,6 +6,9 @@ import androidx.lifecycle.viewModelScope
 import com.atomtasks.feature.detail.EditRecurringTaskResponse.THIS
 import com.atomtasks.feature.detail.EditRecurringTaskResponse.THIS_AND_FUTURE_ONES
 import com.costular.atomtasks.analytics.AtomAnalytics
+import com.costular.atomtasks.core.ui.AppSnackbarMessage
+import com.costular.atomtasks.core.ui.R
+import com.costular.atomtasks.core.ui.SnackbarManager
 import com.costular.atomtasks.core.ui.mvi.MviViewModel
 import com.costular.atomtasks.tasks.model.RecurrenceType
 import com.costular.atomtasks.tasks.model.RecurringUpdateStrategy
@@ -33,11 +36,11 @@ class TaskDetailViewModel @Inject constructor(
     private val getTaskByIdUseCase: GetTaskByIdUseCase,
     private val editTaskUseCase: EditTaskUseCase,
     private val createTaskUseCase: CreateTaskUseCase,
+    private val removeTaskUseCase: RemoveTaskUseCase,
     private val atomAnalytics: AtomAnalytics,
     private val updateTaskIsDoneUseCase: UpdateTaskIsDoneUseCase,
-    private val removeTaskUseCase: RemoveTaskUseCase,
+    private val snackbarManager: SnackbarManager,
 ) : MviViewModel<TaskDetailUiState>(TaskDetailUiState()) {
-
     private val navArgs: TaskDetailNavArgs = TaskDetailScreenDestination.argsFrom(savedStateHandle)
 
     init {
@@ -100,24 +103,18 @@ class TaskDetailViewModel @Inject constructor(
             copy(
                 removeTaskConfirmationUiState = RemoveTaskConfirmationUiState.Shown(
                     taskId = taskId,
-                    this.initialTaskState.recurrenceType != null,
+                    isRecurring = initialTaskState.recurrenceType != null,
                 )
             )
         }
     }
 
     fun deleteTask(taskId: Long) {
-        viewModelScope.launch {
-            removeTaskUseCase(RemoveTaskUseCase.Params(taskId))
-            sendEvent(TaskDetailUiEvent.Close)
-        }
+        removeTask(taskId = taskId, strategy = null)
     }
 
     fun deleteRecurringTask(id: Long, recurringRemovalStrategy: RecurringRemovalStrategy) {
-        viewModelScope.launch {
-            removeTaskUseCase(RemoveTaskUseCase.Params(id, recurringRemovalStrategy))
-            sendEvent(TaskDetailUiEvent.Close)
-        }
+        removeTask(taskId = id, strategy = recurringRemovalStrategy)
     }
 
     fun dismissDeleteConfirmation() {
@@ -130,7 +127,7 @@ class TaskDetailViewModel @Inject constructor(
                 taskState = taskState.copy(
                     date = localDate,
                 ),
-                showSetDate = false
+                showSetDate = false,
             )
         }
     }
@@ -176,7 +173,7 @@ class TaskDetailViewModel @Inject constructor(
         setState {
             copy(
                 taskState = taskState.copy(
-                    reminder = null
+                    reminder = null,
                 )
             )
         }
@@ -191,13 +188,11 @@ class TaskDetailViewModel @Inject constructor(
         setState { copy(showSetRecurrence = false) }
     }
 
-    fun onRecurrenceChanged(
-        recurrenceType: RecurrenceType?
-    ) {
+    fun onRecurrenceChanged(recurrenceType: RecurrenceType?) {
         setState {
             copy(
                 taskState = taskState.copy(recurrenceType = recurrenceType),
-                showSetRecurrence = false
+                showSetRecurrence = false,
             )
         }
     }
@@ -206,7 +201,7 @@ class TaskDetailViewModel @Inject constructor(
         setState {
             copy(
                 taskState = taskState.copy(recurrenceType = null),
-                showSetRecurrence = false
+                showSetRecurrence = false,
             )
         }
     }
@@ -221,9 +216,21 @@ class TaskDetailViewModel @Inject constructor(
                         taskId = taskId,
                         isDone = isDone,
                     )
-                ).tap {
-                    setState { copy(isDone = isDone) }
-                }
+                ).fold(
+                    ifError = {
+                        showSnackbar(R.string.error_generic)
+                    },
+                    ifResult = {
+                        setState { copy(isDone = isDone) }
+                        showSnackbar(
+                            if (isDone) {
+                                R.string.task_feedback_completed
+                            } else {
+                                R.string.task_feedback_reopened
+                            }
+                        )
+                    }
+                )
             } else {
                 setState { copy(isDone = isDone) }
             }
@@ -285,10 +292,12 @@ class TaskDetailViewModel @Inject constructor(
                 ),
             ).fold(
                 ifError = {
-                    // TODO: Handle error
+                    setState { copy(isSaving = false) }
+                    showSnackbar(R.string.error_generic)
                 },
                 ifResult = {
                     atomAnalytics.track(DetailAnalytics.TaskCreated)
+                    showSnackbar(R.string.task_feedback_created)
                     sendEvent(TaskDetailUiEvent.Close)
                 }
             )
@@ -299,9 +308,9 @@ class TaskDetailViewModel @Inject constructor(
         recurringUpdateStrategy: RecurringUpdateStrategy?,
     ) {
         viewModelScope.launch {
-            val state = state.value
+            val currentState = state.value
 
-            if (state.initialTaskState.recurrenceType != null && recurringUpdateStrategy == null) {
+            if (currentState.initialTaskState.recurrenceType != null && recurringUpdateStrategy == null) {
                 setState {
                     copy(
                         taskToSave = TaskToSave(
@@ -318,18 +327,20 @@ class TaskDetailViewModel @Inject constructor(
             editTaskUseCase(
                 EditTaskUseCase.Params(
                     taskId = requireNotNull(navArgs.taskId),
-                    name = state.taskState.name.text.toString(),
-                    date = state.taskState.date,
-                    reminderTime = state.taskState.reminder,
-                    recurrenceType = state.taskState.recurrenceType,
+                    name = currentState.taskState.name.text.toString(),
+                    date = currentState.taskState.date,
+                    reminderTime = currentState.taskState.reminder,
+                    recurrenceType = currentState.taskState.recurrenceType,
                     recurringUpdateStrategy = recurringUpdateStrategy,
                 ),
             ).fold(
                 ifError = {
-                    // TODO failure
+                    setState { copy(isSaving = false) }
+                    showSnackbar(R.string.error_generic)
                 },
                 ifResult = {
                     atomAnalytics.track(DetailAnalytics.TaskEdited)
+                    showSnackbar(R.string.task_feedback_updated)
                     sendEvent(TaskDetailUiEvent.Close)
                 }
             )
@@ -362,5 +373,43 @@ class TaskDetailViewModel @Inject constructor(
             copy(shouldShowDiscardChangesConfirmation = false)
         }
         sendEvent(TaskDetailUiEvent.Close)
+    }
+
+    private fun removeTask(
+        taskId: Long,
+        strategy: RecurringRemovalStrategy?,
+    ) {
+        dismissDeleteConfirmation()
+        viewModelScope.launch {
+            removeTaskUseCase(
+                RemoveTaskUseCase.Params(
+                    taskId = taskId,
+                    strategy = strategy,
+                )
+            ).fold(
+                ifError = {
+                    showSnackbar(R.string.error_generic)
+                },
+                ifResult = {
+                    showSnackbar(deleteMessageFor(strategy))
+                    sendEvent(TaskDetailUiEvent.Close)
+                }
+            )
+        }
+    }
+
+    private fun deleteMessageFor(strategy: RecurringRemovalStrategy?): Int = when (strategy) {
+        RecurringRemovalStrategy.SINGLE_AND_FUTURE_ONES -> R.string.task_feedback_deleted_future
+        RecurringRemovalStrategy.FUTURE_ONES -> R.string.task_feedback_deleted_future
+        RecurringRemovalStrategy.ALL -> R.string.task_feedback_deleted_all
+        RecurringRemovalStrategy.SINGLE, null -> R.string.task_feedback_deleted
+    }
+
+    private fun showSnackbar(messageRes: Int) {
+        snackbarManager.showMessage(
+            AppSnackbarMessage(
+                messageRes = messageRes,
+            )
+        )
     }
 }

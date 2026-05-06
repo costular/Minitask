@@ -19,7 +19,9 @@ fun rememberAtomAppState(
     navController: NavHostController,
 ): AtomAppState {
     return remember(navController) {
-        AtomAppState(navController)
+        AtomAppState(
+            navController = navController,
+        )
     }
 }
 
