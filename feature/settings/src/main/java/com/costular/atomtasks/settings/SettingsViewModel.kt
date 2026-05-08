@@ -61,7 +61,7 @@ class SettingsViewModel @Inject constructor(
             setState { copy(backupProcessState = BackupProcessState.Loading) }
             exportBackupUseCase(Unit).fold(
                 ifError = { error ->
-                    showBackupError(error.toString())
+                    showBackupError()
                 },
                 ifResult = { json ->
                     try {
@@ -70,7 +70,7 @@ class SettingsViewModel @Inject constructor(
                         }
                         showBackupResult(BackupOperationType.BACKUP)
                     } catch (e: Exception) {
-                        showBackupError(e.message)
+                        showBackupError()
                     }
                 }
             )
@@ -110,17 +110,17 @@ class SettingsViewModel @Inject constructor(
                 if (json != null) {
                     importBackupUseCase(json).fold(
                         ifError = { error ->
-                            showBackupError(error.toString())
+                            showBackupError()
                         },
                         ifResult = {
                             showBackupResult(BackupOperationType.RESTORE)
                         }
                     )
                 } else {
-                    showBackupError("Could not read file")
+                    showBackupError()
                 }
             } catch (e: Exception) {
-                showBackupError(e.message)
+                showBackupError()
             }
         }
     }

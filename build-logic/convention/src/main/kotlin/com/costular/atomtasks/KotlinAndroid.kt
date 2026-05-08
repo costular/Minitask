@@ -4,9 +4,12 @@ import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.dsl.CompileOptions
 import com.android.build.api.dsl.LibraryExtension
 import com.android.build.api.dsl.TestExtension
+import com.android.build.api.dsl.TestOptions
 import org.gradle.api.JavaVersion
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPluginExtension
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.testing.Test
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.assign
@@ -25,6 +28,7 @@ internal fun Project.configureKotlinAndroid(
 ) {
     applicationExtension.compileSdk = 36
     applicationExtension.defaultConfig.minSdk = 26
+    applicationExtension.testOptions.configureUnitTests()
     configureJavaToolchain()
     applicationExtension.compileOptions.configureJvm21()
     configureAndroidCompilerOptions()
@@ -35,6 +39,7 @@ internal fun Project.configureKotlinAndroid(
 ) {
     libraryExtension.compileSdk = 36
     libraryExtension.defaultConfig.minSdk = 26
+    libraryExtension.testOptions.configureUnitTests()
     configureJavaToolchain()
     libraryExtension.compileOptions.configureJvm21()
     configureAndroidCompilerOptions()
@@ -45,6 +50,7 @@ internal fun Project.configureKotlinAndroid(
 ) {
     testExtension.compileSdk = 36
     testExtension.defaultConfig.minSdk = 26
+    testExtension.testOptions.configureUnitTests()
     configureJavaToolchain()
     testExtension.compileOptions.configureJvm21()
     configureAndroidCompilerOptions()
@@ -85,6 +91,18 @@ private fun Project.configureAndroidCompilerOptions() {
 
 private fun Project.configureJavaToolchain() {
     extensions.findByType<JavaPluginExtension>()?.toolchain?.languageVersion?.set(JavaLanguageVersion.of(21))
+}
+
+private fun TestOptions.configureUnitTests() {
+    unitTests.all { test -> test.disableFailOnNoDiscoveredTests() }
+}
+
+private fun Test.disableFailOnNoDiscoveredTests() {
+    @Suppress("UNCHECKED_CAST")
+    (javaClass.methods
+        .firstOrNull { it.name == "getFailOnNoDiscoveredTests" }
+        ?.invoke(this) as? Property<Boolean>)
+        ?.set(false)
 }
 
 private fun CompileOptions.configureJvm21() {

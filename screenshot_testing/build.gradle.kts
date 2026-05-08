@@ -34,6 +34,11 @@ tasks.named("check") {
     dependsOn("verifyPaparazziDemoDebug")
 }
 
+tasks.withType<Test>().matching { it.name == "testDebugUnitTest" }.configureEach {
+    // Paparazzi verification is run via its dedicated tasks instead of the generic Gradle `test` lifecycle.
+    enabled = false
+}
+
 tasks.withType<Test>().configureEach {
     // Increase memory for Paparazzi tests
     maxHeapSize = "2g"
