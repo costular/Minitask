@@ -1,6 +1,5 @@
 package com.costular.atomtasks.core.ui
 
-import android.content.Context
 import androidx.annotation.StringRes
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
@@ -9,7 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -57,13 +56,13 @@ fun AppSnackbarHostEffect(
     appSnackbarState: AppSnackbarState,
     snackbarController: SnackbarController,
 ) {
-    val context = LocalContext.current
+    val resources = LocalResources.current
 
-    LaunchedEffect(appSnackbarState, snackbarController, context) {
+    LaunchedEffect(appSnackbarState, snackbarController, resources) {
         snackbarController.observeMessages().collect { message ->
             val result = appSnackbarState.hostState.showSnackbar(
-                message = context.getString(message.messageRes),
-                actionLabel = message.action?.let { context.getString(it.labelRes) },
+                message = resources.getString(message.messageRes),
+                actionLabel = message.action?.let { resources.getString(it.labelRes) },
                 withDismissAction = message.withDismissAction,
                 duration = message.duration,
             )

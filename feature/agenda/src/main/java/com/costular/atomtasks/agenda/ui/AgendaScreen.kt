@@ -23,7 +23,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.costular.atomtasks.agenda.actions.TaskActionsResult
-import com.costular.atomtasks.core.ui.R
 import com.costular.atomtasks.core.ui.mvi.EventObserver
 import com.costular.atomtasks.core.ui.tasks.ItemPosition
 import com.costular.atomtasks.core.ui.tasks.TaskList
