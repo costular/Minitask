@@ -12,7 +12,6 @@ import android.text.format.DateFormat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.os.ConfigurationCompat
-import com.costular.atomtasks.core.ui.R
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
@@ -23,6 +22,8 @@ import javax.inject.Inject
 
 class TaskNotificationManagerImpl @Inject constructor(
     @ApplicationContext private val context: Context,
+    private val notificationNavigationIntentFactory: NotificationNavigationIntentFactory,
+    private val notificationResources: NotificationResources,
 ) : TaskNotificationManager {
 
     private val notificationManager: NotificationManagerCompat =
@@ -33,13 +34,14 @@ class TaskNotificationManagerImpl @Inject constructor(
     }
 
     private fun createNotificationChannels() {
-        val name = context.getString(R.string.notification_channel_reminders_title)
-        val descriptionText =
-            context.getString(R.string.notification_channel_reminders_description)
         val importance = NotificationManager.IMPORTANCE_HIGH
         val reminders =
-            NotificationChannel(NotificationChannels.Reminders, name, importance).apply {
-                description = descriptionText
+            NotificationChannel(
+                NotificationChannels.Reminders,
+                notificationResources.remindersChannelTitle,
+                importance,
+            ).apply {
+                description = notificationResources.remindersChannelDescription
             }
 
         val notificationManager: NotificationManager =
@@ -52,10 +54,11 @@ class TaskNotificationManagerImpl @Inject constructor(
             locale = context.notificationLocale(),
             use24HourFormat = DateFormat.is24HourFormat(context),
         )
-        val builder = context.buildNotificationBase(NotificationChannels.Reminders)
+        val builder = context
+            .buildNotificationBase(NotificationChannels.Reminders, notificationResources)
             .applyTaskReminderContent(taskName, reminderDateTimeText)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .openAppContentIntent(context)
+            .setContentIntent(notificationNavigationIntentFactory.openTaskDetail(taskId))
             .setAutoCancel(true)
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
             .addAction(
@@ -70,7 +73,7 @@ class TaskNotificationManagerImpl @Inject constructor(
 
     private fun buildPostponeAction(taskId: Long) = NotificationCompat.Action.Builder(
         0,
-        context.getString(R.string.notification_reminder_postpone),
+        notificationResources.taskReminderPostponeAction,
         PendingIntent.getActivity(
             context,
             generateRandomRequestCode(),
@@ -92,7 +95,7 @@ class TaskNotificationManagerImpl @Inject constructor(
 
     private fun buildDoneAction(taskId: Long) = NotificationCompat.Action.Builder(
         0,
-        context.getString(R.string.notification_reminder_done),
+        notificationResources.taskReminderDoneAction,
         PendingIntent.getBroadcast(
             context,
             generateRandomRequestCode(),

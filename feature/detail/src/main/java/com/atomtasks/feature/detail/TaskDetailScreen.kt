@@ -74,6 +74,7 @@ import com.costular.designsystem.dialogs.TimePickerDialog
 import com.costular.designsystem.theme.AppTheme
 import com.costular.designsystem.theme.AtomTheme
 import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.annotation.parameters.DeepLink
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import java.time.LocalDate
 import java.time.LocalTime
@@ -86,6 +87,12 @@ private const val FieldMinLines = 1
 @Destination<TaskDetailGraph>(
     start = true,
     navArgs = TaskDetailNavArgs::class,
+    deepLinks = [
+        DeepLink(
+            action = Intent.ACTION_VIEW,
+            uriPattern = "https://atomtasks.app/tasks/{taskId}",
+        )
+    ],
 )
 @Composable
 fun TaskDetailScreen(

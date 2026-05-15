@@ -10,6 +10,11 @@ import dagger.hilt.components.SingletonComponent
 interface NotificationsModule {
 
     @Binds
+    fun bindNotificationResources(
+        androidNotificationResources: AndroidNotificationResources,
+    ): NotificationResources
+
+    @Binds
     fun bindTaskNotificationsManager(
         taskNotificationManagerImpl: TaskNotificationManagerImpl
     ): TaskNotificationManager

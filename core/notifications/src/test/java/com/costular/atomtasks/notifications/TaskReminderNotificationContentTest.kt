@@ -1,6 +1,10 @@
 package com.costular.atomtasks.notifications
 
 import android.app.Notification
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
 import androidx.core.app.NotificationCompat
 import androidx.test.core.app.ApplicationProvider
 import com.google.common.truth.Truth.assertThat
@@ -9,6 +13,7 @@ import java.util.Locale
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 
 @Config(sdk = [33])
@@ -16,6 +21,8 @@ import org.robolectric.annotation.Config
 class TaskReminderNotificationContentTest {
 
     private val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+    private val notificationResources = FakeNotificationResources()
+    private val notificationManager = context.getSystemService(NotificationManager::class.java)
 
     @Test
     fun `applyTaskReminderContent uses task name as notification title`() {
@@ -41,6 +48,50 @@ class TaskReminderNotificationContentTest {
             .isEqualTo(reminderDateTimeText)
         assertThat(notification.extras.getCharSequence(Notification.EXTRA_BIG_TEXT).toString())
             .isEqualTo(reminderDateTimeText)
+    }
+
+    @Test
+    fun `remindTask uses task detail navigation pending intent`() {
+        val taskId = 42L
+        val notificationNavigationIntentFactory = FakeNotificationNavigationIntentFactory(context)
+        val manager = TaskNotificationManagerImpl(
+            context,
+            notificationNavigationIntentFactory,
+            notificationResources,
+        )
+
+        manager.remindTask(
+            taskId = taskId,
+            taskName = "Prepare quarterly roadmap",
+            reminderDateTime = LocalDateTime.of(2024, 5, 15, 18, 23),
+        )
+
+        val notification = shadowOf(notificationManager).getNotification(taskId.toInt())
+        assertThat(notification.contentIntent)
+            .isEqualTo(notificationNavigationIntentFactory.openTaskDetailPendingIntent)
+        assertThat(notificationNavigationIntentFactory.openTaskDetailTaskId).isEqualTo(taskId)
+    }
+
+    @Test
+    fun `remindTask actions keep expected task id extras`() {
+        val taskId = 42L
+        val manager = TaskNotificationManagerImpl(
+            context,
+            FakeNotificationNavigationIntentFactory(context),
+            notificationResources,
+        )
+
+        manager.remindTask(
+            taskId = taskId,
+            taskName = "Prepare quarterly roadmap",
+            reminderDateTime = LocalDateTime.of(2024, 5, 15, 18, 23),
+        )
+
+        val notification = shadowOf(notificationManager).getNotification(taskId.toInt())
+        val doneIntent = shadowOf(notification.actions[0].actionIntent).savedIntent
+        val postponeIntent = shadowOf(notification.actions[1].actionIntent).savedIntent
+        assertThat(doneIntent.getLongExtra("task_id", -1L)).isEqualTo(taskId)
+        assertThat(postponeIntent.getLongExtra("postpone_param_task_id", -1L)).isEqualTo(taskId)
     }
 
     @Test
@@ -77,5 +128,30 @@ class TaskReminderNotificationContentTest {
         assertThat(formatted).contains("·")
         assertThat(formatted).doesNotContain("PM")
         assertThat(formatted).doesNotContain("AM")
+    }
+
+    private class FakeNotificationNavigationIntentFactory(
+        private val context: Context,
+    ) : NotificationNavigationIntentFactory {
+        val openAppPendingIntent: PendingIntent = PendingIntent.getActivity(
+            context,
+            1,
+            Intent("open_app"),
+            PendingIntent.FLAG_IMMUTABLE,
+        )
+        val openTaskDetailPendingIntent: PendingIntent = PendingIntent.getActivity(
+            context,
+            2,
+            Intent("open_task_detail"),
+            PendingIntent.FLAG_IMMUTABLE,
+        )
+        var openTaskDetailTaskId: Long? = null
+
+        override fun openApp(): PendingIntent = openAppPendingIntent
+
+        override fun openTaskDetail(taskId: Long): PendingIntent {
+            openTaskDetailTaskId = taskId
+            return openTaskDetailPendingIntent
+        }
     }
 }
