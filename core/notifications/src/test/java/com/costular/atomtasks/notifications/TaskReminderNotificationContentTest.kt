@@ -4,6 +4,8 @@ import android.app.Notification
 import androidx.core.app.NotificationCompat
 import androidx.test.core.app.ApplicationProvider
 import com.google.common.truth.Truth.assertThat
+import java.time.LocalDateTime
+import java.util.Locale
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -20,7 +22,7 @@ class TaskReminderNotificationContentTest {
         val taskName = "Prepare quarterly roadmap"
 
         val notification = NotificationCompat.Builder(context, "reminders")
-            .applyTaskReminderContent(taskName)
+            .applyTaskReminderContent(taskName, "1/2/26, 9:05 AM")
             .build()
 
         assertThat(notification.extras.getCharSequence(Notification.EXTRA_TITLE).toString())
@@ -28,17 +30,52 @@ class TaskReminderNotificationContentTest {
     }
 
     @Test
-    fun `applyTaskReminderContent keeps full long task name in expanded content`() {
-        val taskName = buildString {
-            append("Review architecture proposal for adaptive notification layout and ")
-            append("validate every long-title edge case before the release candidate goes live")
-        }
+    fun `applyTaskReminderContent uses reminder date time as notification text`() {
+        val reminderDateTimeText = "1/2/26, 9:05 AM"
 
         val notification = NotificationCompat.Builder(context, "reminders")
-            .applyTaskReminderContent(taskName)
+            .applyTaskReminderContent("Prepare quarterly roadmap", reminderDateTimeText)
             .build()
 
+        assertThat(notification.extras.getCharSequence(Notification.EXTRA_TEXT).toString())
+            .isEqualTo(reminderDateTimeText)
         assertThat(notification.extras.getCharSequence(Notification.EXTRA_BIG_TEXT).toString())
-            .isEqualTo(taskName)
+            .isEqualTo(reminderDateTimeText)
+    }
+
+    @Test
+    fun `formatReminderNotificationDateTime uses readable 12 hour time and localized date`() {
+        val reminderDateTime = LocalDateTime.of(2024, 5, 15, 18, 23)
+
+        val formatted = reminderDateTime.formatReminderNotificationDateTime(
+            locale = Locale.US,
+            use24HourFormat = false,
+        )
+
+        assertThat(formatted).contains("6:23")
+        assertThat(formatted).contains("PM")
+        assertThat(formatted).contains("Wednesday")
+        assertThat(formatted).contains("May")
+        assertThat(formatted).contains("15")
+        assertThat(formatted).contains("·")
+    }
+
+    @Test
+    fun `formatReminderNotificationDateTime uses readable 24 hour time and localized date`() {
+        val reminderDateTime = LocalDateTime.of(2024, 5, 15, 18, 23)
+        val spanishLocale = Locale.forLanguageTag("es-ES")
+
+        val formatted = reminderDateTime.formatReminderNotificationDateTime(
+            locale = spanishLocale,
+            use24HourFormat = true,
+        )
+
+        assertThat(formatted).contains("18:23")
+        assertThat(formatted.lowercase(spanishLocale)).contains("miércoles")
+        assertThat(formatted.lowercase(spanishLocale)).contains("may")
+        assertThat(formatted).contains("15")
+        assertThat(formatted).contains("·")
+        assertThat(formatted).doesNotContain("PM")
+        assertThat(formatted).doesNotContain("AM")
     }
 }

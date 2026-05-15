@@ -8,10 +8,17 @@ import android.app.PendingIntent
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.text.format.DateFormat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.os.ConfigurationCompat
 import com.costular.atomtasks.core.ui.R
 import dagger.hilt.android.qualifiers.ApplicationContext
+import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.util.Date
+import java.util.Locale
 import javax.inject.Inject
 
 class TaskNotificationManagerImpl @Inject constructor(
@@ -40,9 +47,13 @@ class TaskNotificationManagerImpl @Inject constructor(
         notificationManager.createNotificationChannel(reminders)
     }
 
-    override fun remindTask(taskId: Long, taskName: String) {
+    override fun remindTask(taskId: Long, taskName: String, reminderDateTime: LocalDateTime) {
+        val reminderDateTimeText = reminderDateTime.formatReminderNotificationDateTime(
+            locale = context.notificationLocale(),
+            use24HourFormat = DateFormat.is24HourFormat(context),
+        )
         val builder = context.buildNotificationBase(NotificationChannels.Reminders)
-            .applyTaskReminderContent(taskName)
+            .applyTaskReminderContent(taskName, reminderDateTimeText)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .openAppContentIntent(context)
             .setAutoCancel(true)
@@ -119,10 +130,31 @@ class TaskNotificationManagerImpl @Inject constructor(
 
 internal fun NotificationCompat.Builder.applyTaskReminderContent(
     taskName: String,
+    reminderDateTimeText: String,
 ): NotificationCompat.Builder = apply {
     setContentTitle(taskName)
+    setContentText(reminderDateTimeText)
     setStyle(
         NotificationCompat.BigTextStyle()
-            .bigText(taskName),
+            .bigText(reminderDateTimeText),
     )
 }
+
+internal fun LocalDateTime.formatReminderNotificationDateTime(
+    locale: Locale,
+    use24HourFormat: Boolean,
+): String {
+    val date = Date.from(atZone(ZoneId.systemDefault()).toInstant())
+    val timePattern = DateFormat.getBestDateTimePattern(
+        locale,
+        if (use24HourFormat) "Hm" else "hma",
+    )
+    val datePattern = DateFormat.getBestDateTimePattern(locale, "EEEEdMMM")
+    val timeText = SimpleDateFormat(timePattern, locale).format(date)
+    val dateText = SimpleDateFormat(datePattern, locale).format(date)
+
+    return "$timeText · $dateText"
+}
+
+private fun Context.notificationLocale(): Locale =
+    ConfigurationCompat.getLocales(resources.configuration)[0] ?: Locale.getDefault()

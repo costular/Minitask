@@ -40,7 +40,12 @@ class RestoreMissedTaskRemindersWorker @AssistedInject constructor(
                     }
                     .sortedBy { task -> task.reminder?.localDateTime }
                     .forEach { task ->
-                        taskNotificationManager.remindTask(task.id, task.name)
+                        val reminder = checkNotNull(task.reminder)
+                        taskNotificationManager.remindTask(
+                            task.id,
+                            task.name,
+                            reminder.localDateTime,
+                        )
                     }
             }
 

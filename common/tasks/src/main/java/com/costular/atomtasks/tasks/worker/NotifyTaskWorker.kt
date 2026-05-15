@@ -48,7 +48,11 @@ class NotifyTaskWorker @AssistedInject constructor(
                 )
             }
 
-            taskNotificationManager.remindTask(task.id, task.name)
+            taskNotificationManager.remindTask(
+                task.id,
+                task.name,
+                task.reminder.localDateTime,
+            )
             Result.success()
         } catch (e: Exception) {
             atomLog { e }

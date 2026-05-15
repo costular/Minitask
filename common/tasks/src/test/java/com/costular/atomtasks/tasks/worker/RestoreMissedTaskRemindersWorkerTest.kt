@@ -55,7 +55,13 @@ class RestoreMissedTaskRemindersWorkerTest {
 
         val result = sut.doWork()
 
-        verify { taskNotificationManager.remindTask(task.id, task.name) }
+        verify {
+            taskNotificationManager.remindTask(
+                task.id,
+                task.name,
+                task.reminder!!.localDateTime,
+            )
+        }
         assertThat(result).isEqualTo(Result.success())
     }
 
@@ -73,7 +79,7 @@ class RestoreMissedTaskRemindersWorkerTest {
 
         sut.doWork()
 
-        verify(exactly = 0) { taskNotificationManager.remindTask(any(), any()) }
+        verify(exactly = 0) { taskNotificationManager.remindTask(any(), any(), any()) }
     }
 
     @Test
@@ -89,7 +95,7 @@ class RestoreMissedTaskRemindersWorkerTest {
 
         sut.doWork()
 
-        verify(exactly = 0) { taskNotificationManager.remindTask(any(), any()) }
+        verify(exactly = 0) { taskNotificationManager.remindTask(any(), any(), any()) }
     }
 
     @Test
@@ -106,7 +112,7 @@ class RestoreMissedTaskRemindersWorkerTest {
 
         sut.doWork()
 
-        verify(exactly = 0) { taskNotificationManager.remindTask(any(), any()) }
+        verify(exactly = 0) { taskNotificationManager.remindTask(any(), any(), any()) }
     }
 
     @Test
@@ -115,7 +121,7 @@ class RestoreMissedTaskRemindersWorkerTest {
 
         sut.doWork()
 
-        verify(exactly = 0) { taskNotificationManager.remindTask(any(), any()) }
+        verify(exactly = 0) { taskNotificationManager.remindTask(any(), any(), any()) }
     }
 
     @Test
@@ -143,8 +149,16 @@ class RestoreMissedTaskRemindersWorkerTest {
         sut.doWork()
 
         verifyOrder {
-            taskNotificationManager.remindTask(firstTask.id, firstTask.name)
-            taskNotificationManager.remindTask(secondTask.id, secondTask.name)
+            taskNotificationManager.remindTask(
+                firstTask.id,
+                firstTask.name,
+                firstTask.reminder!!.localDateTime,
+            )
+            taskNotificationManager.remindTask(
+                secondTask.id,
+                secondTask.name,
+                secondTask.reminder!!.localDateTime,
+            )
         }
     }
 
@@ -154,7 +168,7 @@ class RestoreMissedTaskRemindersWorkerTest {
 
         val result = sut.doWork()
 
-        verify(exactly = 0) { taskNotificationManager.remindTask(any(), any()) }
+        verify(exactly = 0) { taskNotificationManager.remindTask(any(), any(), any()) }
         assertThat(result).isEqualTo(Result.failure())
     }
 
