@@ -3,7 +3,6 @@ package com.costular.atomtasks.notifications
 import android.app.PendingIntent
 import android.content.Intent
 import androidx.test.core.app.ApplicationProvider
-import com.costular.atomtasks.ui.home.MainActivity
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -25,7 +24,7 @@ class DefaultNotificationNavigationIntentFactoryTest {
         val intent = shadowOf(pendingIntent).savedIntent
         assertThat(intent.action).isEqualTo(Intent.ACTION_VIEW)
         assertThat(intent.data.toString()).isEqualTo("https://atomtasks.app/tasks/42")
-        assertThat(intent.component?.className).isEqualTo(MainActivity::class.java.name)
+        assertThat(intent.component?.className).isEqualTo(MainActivityName)
     }
 
     @Test
@@ -51,6 +50,10 @@ class DefaultNotificationNavigationIntentFactoryTest {
 
         val intent = shadowOf(pendingIntent).savedIntent
         assertThat(intent.action).isEqualTo(Intent.ACTION_VIEW)
-        assertThat(intent.component?.className).isEqualTo(MainActivity::class.java.name)
+        assertThat(intent.component?.className).isEqualTo(MainActivityName)
+    }
+
+    private companion object {
+        const val MainActivityName = "com.costular.atomtasks.ui.home.MainActivity"
     }
 }

@@ -15,6 +15,11 @@ interface NotificationsModule {
     ): NotificationResources
 
     @Binds
+    fun bindNotificationNavigationIntentFactory(
+        defaultNotificationNavigationIntentFactory: DefaultNotificationNavigationIntentFactory,
+    ): NotificationNavigationIntentFactory
+
+    @Binds
     fun bindTaskNotificationsManager(
         taskNotificationManagerImpl: TaskNotificationManagerImpl
     ): TaskNotificationManager
