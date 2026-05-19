@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -41,14 +42,17 @@ fun RecurrenceTypePickerDialog(
         Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = MaterialTheme.shapes.large,
+            color = AlertDialogDefaults.containerColor,
+            tonalElevation = AlertDialogDefaults.TonalElevation,
         ) {
             Column(
-                modifier = Modifier.padding(vertical = AppTheme.DialogPadding)
+                modifier = Modifier.padding(vertical = AppTheme.DialogPadding),
             ) {
                 ListItem(
                     text = stringResource(S.create_task_recurrence_picker_none),
                     isSelected = recurrenceType == null,
-                    onClick = { onRecurrenceTypeSelected(null) })
+                    onClick = { onRecurrenceTypeSelected(null) },
+                )
 
                 ListItem(
                     text = stringResource(S.create_task_recurrence_picker_daily),
@@ -100,7 +104,7 @@ private fun ListItem(
         RadioButton(
             modifier = Modifier.padding(start = AppTheme.DialogPadding),
             selected = isSelected,
-            onClick = onClick
+            onClick = onClick,
         )
 
         Spacer(Modifier.width(AppTheme.dimens.spacingMedium))
