@@ -9,9 +9,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalResources
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.collectLatest
 
 data class AppSnackbarAction(
     @StringRes val labelRes: Int,
@@ -30,13 +30,16 @@ interface SnackbarManager {
 }
 
 object SnackbarController : SnackbarManager {
-    private val messages = Channel<AppSnackbarMessage>(capacity = Channel.UNLIMITED)
+    private val messages = MutableSharedFlow<AppSnackbarMessage>(
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
+    )
 
     override fun showMessage(message: AppSnackbarMessage) {
-        messages.trySend(message)
+        messages.tryEmit(message)
     }
 
-    internal fun observeMessages() = messages.receiveAsFlow()
+    internal fun observeMessages() = messages
 }
 
 @Stable
@@ -59,7 +62,7 @@ fun AppSnackbarHostEffect(
     val resources = LocalResources.current
 
     LaunchedEffect(appSnackbarState, snackbarController, resources) {
-        snackbarController.observeMessages().collect { message ->
+        snackbarController.observeMessages().collectLatest { message ->
             val result = appSnackbarState.hostState.showSnackbar(
                 message = resources.getString(message.messageRes),
                 actionLabel = message.action?.let { resources.getString(it.labelRes) },
