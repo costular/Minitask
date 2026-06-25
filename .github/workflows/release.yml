@@ -4,6 +4,9 @@ on:
     tags:
       - '*'
 
+permissions:
+  contents: write
+
 jobs:
   detekt:
     runs-on: ubuntu-latest
@@ -102,24 +105,74 @@ jobs:
           echo "${{ secrets.SIGNING_KEY_BASE_64 }}" > release.keystore.asc
           gpg -d --passphrase "${{ secrets.KEY_STORE_PASSWORD }}" --batch release.keystore.asc > release.keystore
 
-      - name: Generate Release Bundle
-        run: ./gradlew bundleProductionRelease
+      - name: Generate Release Bundle and APK
+        run: ./gradlew bundleProductionRelease assembleProductionRelease
         env:
           SIGNING_KEY_ALIAS: ${{ secrets.ALIAS }}
           SIGNING_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           SIGNING_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
 
       - name: Upload artifact
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@7.0.1
         with:
           name: bundle
           path: app/build/outputs/bundle/productionRelease/app-production-release.aab
 
+      - name: Upload APK
+        uses: actions/upload-artifact@7.0.1
+        with:
+          name: apk
+          path: app/build/outputs/apk/production/release/app-production-release.apk
+
       - name: Upload mapping.txt
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@7.0.1
         with:
           name: mapping.txt
           path: app/build/outputs/mapping/productionRelease/mapping.txt
+
+  github-release:
+    needs: [ build ]
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout main
+        uses: actions/checkout@v3
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Prepare changelog
+        run: python3 scripts/prepare-release-changelog.py --tag "${{ github.ref_name }}"
+
+      - name: Commit changelog
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add CHANGELOG.md
+          git diff --cached --quiet || git commit -m "Prepare changelog for ${{ github.ref_name }}"
+          git push origin main
+
+      - name: Download bundle
+        uses: actions/download-artifact@master
+        with:
+          name: bundle
+          path: release-assets
+
+      - name: Download APK
+        uses: actions/download-artifact@master
+        with:
+          name: apk
+          path: release-assets
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          body_path: release-notes.md
+          files: |
+            release-assets/app-production-release.aab
+            release-assets/app-production-release.apk
 
   deploy-play-store:
     needs: [ build ]

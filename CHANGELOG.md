@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 ### Changed
+- Automate GitHub release creation from tags, including changelog release notes and signed APK/AAB assets.
+- Clarify repository guidance for maintaining unreleased changelog entries.
 
 ### Deprecated
 
