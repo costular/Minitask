@@ -2,6 +2,7 @@ package com.costular.atomtasks.tasks.usecase
 
 import com.costular.atomtasks.core.Either
 import com.costular.atomtasks.data.tasks.TaskEntity
+import com.costular.atomtasks.notifications.TaskNotificationManager
 import com.costular.atomtasks.tasks.helper.TaskReminderManager
 import com.costular.atomtasks.tasks.model.RecurrenceType
 import com.costular.atomtasks.tasks.removal.RecurringRemovalStrategy
@@ -20,6 +21,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.slot
+import io.mockk.verify
 import java.time.LocalDate
 import java.time.LocalTime
 import kotlinx.coroutines.flow.flowOf
@@ -34,13 +36,15 @@ class EditTaskUseCaseTest {
     private val repository: TasksRepository = mockk(relaxUnitFun = true)
     private val taskReminderManager: TaskReminderManager = mockk(relaxed = true)
     private val populateRecurringTasksUseCase: PopulateRecurringTasksUseCase = mockk(relaxed = true)
+    private val taskNotificationManager: TaskNotificationManager = mockk(relaxUnitFun = true)
 
     @Before
     fun setUp() {
         sut = EditTaskUseCase(
             repository,
             taskReminderManager,
-            populateRecurringTasksUseCase
+            populateRecurringTasksUseCase,
+            taskNotificationManager,
         )
 
         coEvery {
@@ -204,6 +208,26 @@ class EditTaskUseCaseTest {
     }
 
     @Test
+    fun `should remove task notification after updating task`() = runTest {
+        val taskId = 10L
+
+        givenTask(taskId)
+
+        sut(
+            EditTaskUseCase.Params(
+                taskId = taskId,
+                name = "Whatever",
+                date = LocalDate.now(),
+                reminderTime = null,
+                recurrenceType = null,
+                recurringUpdateStrategy = null,
+            ),
+        )
+
+        verify(exactly = 1) { taskNotificationManager.removeTaskNotification(taskId) }
+    }
+
+    @Test
     fun `should return NameCannotBeEmpty error when set empty name`() = runTest {
         val taskId = 10L
         val newName = ""
@@ -223,6 +247,7 @@ class EditTaskUseCaseTest {
 
         Truth.assertThat((result as Either.Error).error)
             .isInstanceOf(UpdateTaskUseCaseError.NameCannotBeEmpty::class.java)
+        verify(exactly = 0) { taskNotificationManager.removeTaskNotification(taskId) }
     }
 
     @Test

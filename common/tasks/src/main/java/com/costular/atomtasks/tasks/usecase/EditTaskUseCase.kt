@@ -4,6 +4,7 @@ import com.costular.atomtasks.core.Either
 import com.costular.atomtasks.core.logging.atomLog
 import com.costular.atomtasks.core.toError
 import com.costular.atomtasks.core.usecase.UseCase
+import com.costular.atomtasks.notifications.TaskNotificationManager
 import com.costular.atomtasks.tasks.helper.TaskReminderManager
 import com.costular.atomtasks.tasks.model.RecurrenceType
 import com.costular.atomtasks.tasks.removal.RecurringRemovalStrategy
@@ -24,6 +25,7 @@ class EditTaskUseCase @Inject constructor(
     private val tasksRepository: TasksRepository,
     private val taskReminderManager: TaskReminderManager,
     private val populateRecurringTasksUseCase: PopulateRecurringTasksUseCase,
+    private val taskNotificationManager: TaskNotificationManager,
 ) : UseCase<EditTaskUseCase.Params, Either<UpdateTaskUseCaseError, Unit>> {
 
     data class Params(
@@ -90,6 +92,7 @@ class EditTaskUseCase @Inject constructor(
                         }
                     }
                 }
+                taskNotificationManager.removeTaskNotification(taskId)
                 Either.Result(Unit)
             }
         } catch (sql: SQLException) {
