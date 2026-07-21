@@ -6,6 +6,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   detekt:
@@ -144,14 +145,6 @@ jobs:
       - name: Prepare changelog
         run: python3 scripts/prepare-release-changelog.py --tag "${{ github.ref_name }}"
 
-      - name: Commit changelog
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add CHANGELOG.md
-          git diff --cached --quiet || git commit -m "Prepare changelog for ${{ github.ref_name }}"
-          git push origin main
-
       - name: Download bundle
         uses: actions/download-artifact@master
         with:
@@ -173,6 +166,21 @@ jobs:
           files: |
             release-assets/app-production-release.aab
             release-assets/app-production-release.apk
+
+      - name: Create changelog pull request
+        uses: peter-evans/create-pull-request@v8
+        with:
+          add-paths: CHANGELOG.md
+          author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+          branch: release/prepare-changelog-${{ github.ref_name }}
+          commit-message: Prepare changelog for ${{ github.ref_name }}
+          committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+          delete-branch: true
+          title: Prepare changelog for ${{ github.ref_name }}
+          body: |
+            Promotes the Unreleased changelog entries for `${{ github.ref_name }}`.
+
+            This pull request was created by the release workflow after publishing the GitHub release.
 
   deploy-play-store:
     needs: [ build ]
