@@ -32,7 +32,7 @@
 - PR descriptions should state intent, local testing, and UI impact (attach screenshots or screencasts).
 - Link issues, call out config or feature flag changes, and note any follow-up work.
 - Add release-note-worthy changes to `CHANGELOG.md` under `## [Unreleased]`, using the existing Keep a Changelog categories and markdown format.
-- Do not manually promote `Unreleased`, add release dates, or create the next empty `Unreleased` section; the release workflow handles that when a tag is created.
+- Do not manually promote `Unreleased`, add release dates, or create the next empty `Unreleased` section; the release workflow handles that when a tag is created, committing the promotion to a release pull request for `main`.
 
 ## Security & Configuration Tips
 - Signing uses `SIGNING_*` env vars; never commit keystores or secrets.
