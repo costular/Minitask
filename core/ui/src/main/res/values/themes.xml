@@ -1,7 +1,7 @@
 <resources>
     <!-- Base application theme. -->
 
-    <style name="Theme.AtomTasks" parent="android:Theme.Material.Light.NoActionBar">
+    <style name="Theme.Minitask" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:windowNoTitle">true</item>
     </style>
 

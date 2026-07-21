@@ -8,7 +8,7 @@ import com.costular.atomtasks.data.backup.BackupDto
 import com.costular.atomtasks.data.backup.BackupError
 import com.costular.atomtasks.data.backup.ReminderBackupDto
 import com.costular.atomtasks.data.backup.TaskBackupDto
-import com.costular.atomtasks.data.database.AtomTasksDatabase
+import com.costular.atomtasks.data.database.MinitaskDatabase
 import com.costular.atomtasks.data.tasks.ReminderDao
 import com.costular.atomtasks.data.tasks.ReminderEntity
 import com.costular.atomtasks.data.tasks.TaskEntity
@@ -20,7 +20,7 @@ import javax.inject.Inject
 class FileBackupProviderImpl @Inject constructor(
     private val tasksDao: TasksDao,
     private val reminderDao: ReminderDao,
-    private val db: AtomTasksDatabase,
+    private val db: MinitaskDatabase,
 ) : BackupProvider {
 
     private val jsonSerializer = Json { ignoreUnknownKeys = true }

@@ -1,6 +1,6 @@
 package com.costular.atomtasks.data.tasks
 
-import com.costular.atomtasks.data.database.AtomTasksDatabase
+import com.costular.atomtasks.data.database.MinitaskDatabase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -12,11 +12,11 @@ object DaosModule {
 
     @Provides
     fun providesTaskDao(
-        database: AtomTasksDatabase,
+        database: MinitaskDatabase,
     ): TasksDao = database.getTasksDao()
 
     @Provides
     fun providesRemindersDao(
-        database: AtomTasksDatabase,
+        database: MinitaskDatabase,
     ): ReminderDao = database.getRemindersDao()
 }

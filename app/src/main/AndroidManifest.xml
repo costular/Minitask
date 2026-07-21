@@ -8,18 +8,18 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
-        android:name="com.costular.atomtasks.ui.AtomTasksApp"
+        android:name="com.costular.atomtasks.ui.MinitaskApp"
         android:allowBackup="true"
         android:fullBackupContent="@xml/backup_descriptor"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
-        android:theme="@style/Theme.AtomTasks">
+        android:theme="@style/Theme.Minitask">
         <activity
             android:name="com.costular.atomtasks.ui.home.MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.AtomTasks"
+            android:theme="@style/Theme.Minitask"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

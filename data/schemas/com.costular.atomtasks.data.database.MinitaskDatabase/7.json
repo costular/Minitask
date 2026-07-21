@@ -55,20 +55,17 @@
           {
             "fieldPath": "recurrenceType",
             "columnName": "recurrence_type",
-            "affinity": "TEXT",
-            "notNull": false
+            "affinity": "TEXT"
           },
           {
             "fieldPath": "recurrenceEndDate",
             "columnName": "recurrence_end_date",
-            "affinity": "TEXT",
-            "notNull": false
+            "affinity": "TEXT"
           },
           {
             "fieldPath": "parentId",
             "columnName": "parent_id",
-            "affinity": "INTEGER",
-            "notNull": false
+            "affinity": "INTEGER"
           }
         ],
         "primaryKey": {
@@ -106,8 +103,7 @@
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_tasks_parent_id` ON `${TABLE_NAME}` (`parent_id`)"
           }
-        ],
-        "foreignKeys": []
+        ]
       },
       {
         "tableName": "reminders",
@@ -143,12 +139,9 @@
           "columnNames": [
             "reminder_id"
           ]
-        },
-        "indices": [],
-        "foreignKeys": []
+        }
       }
     ],
-    "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
       "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '959f11c17c9a6dc0c58d6c7d660c514d')"

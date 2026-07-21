@@ -19,8 +19,8 @@ abstract class DatabaseModule {
     companion object {
         @Singleton
         @Provides
-        fun provideDatabase(@ApplicationContext context: Context): AtomTasksDatabase =
-            Room.databaseBuilder(context, AtomTasksDatabase::class.java, "atomtasks.db")
+        fun provideDatabase(@ApplicationContext context: Context): MinitaskDatabase =
+            Room.databaseBuilder(context, MinitaskDatabase::class.java, "atomtasks.db")
                 .addMigrations(
                     MIGRATION_4_5,
                     MIGRATION_5_6,

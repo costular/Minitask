@@ -4,8 +4,8 @@ import androidx.room.withTransaction
 import javax.inject.Inject
 
 class RoomTransactionRunner @Inject constructor(
-    private val atomTasksDatabase: AtomTasksDatabase
+    private val minitaskDatabase: MinitaskDatabase
 ) : TransactionRunner {
     override suspend fun <T> runAsTransaction(block: suspend () -> T): T =
-        atomTasksDatabase.withTransaction(block)
+        minitaskDatabase.withTransaction(block)
 }

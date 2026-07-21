@@ -22,7 +22,7 @@ import com.costular.atomtasks.data.tasks.TasksDao
         ),
     ]
 )
-abstract class AtomTasksDatabase : RoomDatabase() {
+abstract class MinitaskDatabase : RoomDatabase() {
     abstract fun getTasksDao(): TasksDao
     abstract fun getRemindersDao(): ReminderDao
 }

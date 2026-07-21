@@ -1,7 +1,7 @@
-# Atom Tasks - Gemini Context
+# Minitask - Gemini Context
 
 ## Project Overview
-**Atom Tasks** is a modern Android application designed for task organization. It is built entirely with **Kotlin** and **Jetpack Compose**, following Clean Architecture, SOLID principles, and the MVI (Model-View-Intent) pattern.
+**Minitask** is a modern Android application designed for task organization. It is built entirely with **Kotlin** and **Jetpack Compose**, following Clean Architecture, SOLID principles, and the MVI (Model-View-Intent) pattern.
 
 The project emphasizes modularization, robustness (high test coverage including snapshot tests), and the use of cutting-edge Android development tools.
 

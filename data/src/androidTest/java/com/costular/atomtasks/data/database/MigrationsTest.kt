@@ -20,7 +20,7 @@ class MigrationsTest {
     @get:Rule
     val helper: MigrationTestHelper = MigrationTestHelper(
         InstrumentationRegistry.getInstrumentation(),
-        AtomTasksDatabase::class.java,
+        MinitaskDatabase::class.java,
     )
 
     @Test
@@ -36,7 +36,7 @@ class MigrationsTest {
 
         Room.databaseBuilder(
             InstrumentationRegistry.getInstrumentation().targetContext,
-            AtomTasksDatabase::class.java,
+            MinitaskDatabase::class.java,
             TEST_DB,
         ).addMigrations(*ALL_MIGRATIONS).build().apply {
             openHelper.writableDatabase.close()

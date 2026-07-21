@@ -22,7 +22,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class TaskDatabaseTest {
 
-    private lateinit var db: AtomTasksDatabase
+    private lateinit var db: MinitaskDatabase
     private lateinit var tasksDao: TasksDao
 
     @Before
@@ -31,7 +31,7 @@ class TaskDatabaseTest {
 
         db = Room.inMemoryDatabaseBuilder(
             context,
-            AtomTasksDatabase::class.java,
+            MinitaskDatabase::class.java,
         ).build()
         tasksDao = db.getTasksDao()
     }

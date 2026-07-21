@@ -1,9 +1,9 @@
-# ⚛️ Atom Tasks
+# Minitask
 
 | ![Agenda](media/agenda.png) | ![Agenda calendar](media/agenda-calendar.png) | ![Dark mode](media/dark-mode.png) | ![Agenda](media/auto-postpone.png) | ![Notification](media/notification.png) |
 |-----------------------------|-----------------------------------------------|-----------------------------------|------------------------------------|-----------------------------------------|
 
-_Atom tasks_ is an Android Application to create and organise your tasks.
+_Minitask_ is an Android application to create and organise your tasks.
 
 ## Download
 
@@ -25,7 +25,7 @@ _Atom tasks_ is an Android Application to create and organise your tasks.
 ###  Extras you might be interested in
 
 * This application tries to follow Clean Code & SOLID principles.
-* Atom tasks's code tries to write tests as much as possible in order to get a robust code.
+* Minitask's code tries to write tests as much as possible in order to get a robust code.
     * Not only unit tests, you will find also functional and snapshot tests
 * Even it is a production-ready application the objective of this project is to use the cutting-edge libraries and technologies.
 

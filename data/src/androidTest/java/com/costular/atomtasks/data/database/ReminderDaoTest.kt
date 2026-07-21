@@ -22,7 +22,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class ReminderDaoTest {
 
-    private lateinit var db: AtomTasksDatabase
+    private lateinit var db: MinitaskDatabase
     private lateinit var tasksDao: TasksDao
     private lateinit var reminderDao: ReminderDao
 
@@ -32,7 +32,7 @@ class ReminderDaoTest {
 
         db = Room.inMemoryDatabaseBuilder(
             context,
-            AtomTasksDatabase::class.java,
+            MinitaskDatabase::class.java,
         ).build()
         tasksDao = db.getTasksDao()
         reminderDao = db.getRemindersDao()
