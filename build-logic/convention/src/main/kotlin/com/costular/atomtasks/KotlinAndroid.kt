@@ -10,11 +10,9 @@ import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.testing.Test
-import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.assign
 import org.gradle.kotlin.dsl.dependencies
-import org.gradle.kotlin.dsl.findByType
 import org.gradle.kotlin.dsl.getByType
 import org.gradle.kotlin.dsl.provideDelegate
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -29,7 +27,6 @@ internal fun Project.configureKotlinAndroid(
     applicationExtension.compileSdk = 36
     applicationExtension.defaultConfig.minSdk = 26
     applicationExtension.testOptions.configureUnitTests()
-    configureJavaToolchain()
     applicationExtension.compileOptions.configureJvm21()
     configureAndroidCompilerOptions()
 }
@@ -40,7 +37,6 @@ internal fun Project.configureKotlinAndroid(
     libraryExtension.compileSdk = 36
     libraryExtension.defaultConfig.minSdk = 26
     libraryExtension.testOptions.configureUnitTests()
-    configureJavaToolchain()
     libraryExtension.compileOptions.configureJvm21()
     configureAndroidCompilerOptions()
 }
@@ -51,14 +47,12 @@ internal fun Project.configureKotlinAndroid(
     testExtension.compileSdk = 36
     testExtension.defaultConfig.minSdk = 26
     testExtension.testOptions.configureUnitTests()
-    configureJavaToolchain()
     testExtension.compileOptions.configureJvm21()
     configureAndroidCompilerOptions()
 }
 
 internal fun Project.configureKotlinJvm() {
     extensions.configure<JavaPluginExtension> {
-        toolchain.languageVersion.set(JavaLanguageVersion.of(21))
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
     }
@@ -67,7 +61,6 @@ internal fun Project.configureKotlinJvm() {
 }
 
 private inline fun <reified T : KotlinTopLevelExtension> Project.configureKotlin() = configure<T> {
-    jvmToolchain(21)
     when (this) {
         is KotlinAndroidProjectExtension -> compilerOptions
         is KotlinJvmProjectExtension -> compilerOptions
@@ -87,10 +80,6 @@ private fun Project.configureAndroidCompilerOptions() {
     dependencies {
         add("coreLibraryDesugaring", libs.findLibrary("android-desugarjdk").get())
     }
-}
-
-private fun Project.configureJavaToolchain() {
-    extensions.findByType<JavaPluginExtension>()?.toolchain?.languageVersion?.set(JavaLanguageVersion.of(21))
 }
 
 private fun TestOptions.configureUnitTests() {
