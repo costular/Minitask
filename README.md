@@ -1,3 +1,5 @@
+
+
 # Minitask
 
 | ![Agenda](media/agenda.png) | ![Agenda calendar](media/agenda-calendar.png) | ![Dark mode](media/dark-mode.png) | ![Agenda](media/auto-postpone.png) | ![Notification](media/notification.png) |
@@ -17,7 +19,7 @@ _Minitask_ is an Android application to create and organise your tasks.
 * 100% Jetpack Compose
 * Kotlin Coroutines
 * Hilt for dependency injection
-* Room persistance library
+* Room persistence library
 * Detekt
 * [Compose Destinations](https://github.com/raamcosta/compose-destinations) on top of Jetpack Compose Navigation
 * MVI pattern design with `StateFlow`
