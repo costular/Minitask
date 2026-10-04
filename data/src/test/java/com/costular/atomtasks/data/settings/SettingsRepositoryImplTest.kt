@@ -6,8 +6,8 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlin.time.ExperimentalTime
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
@@ -117,6 +117,30 @@ class SettingsRepositoryImplTest {
         sut.setMoveUndoneTaskTomorrow(expected)
 
         coVerify { settingsLocalDataSource.setMoveUndoneTaskTomorrow(expected) }
+    }
+
+    @Test
+    fun `should expose live task list section flag changes`() = runTest {
+        val enabled = MutableStateFlow(false)
+        every { settingsLocalDataSource.observeTaskListSectionsEnabled() } returns enabled
+
+        sut.observeTaskListSectionsEnabled().test {
+            assertThat(awaitItem()).isFalse()
+            enabled.value = true
+            assertThat(awaitItem()).isTrue()
+            enabled.value = false
+            assertThat(awaitItem()).isFalse()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `should save enabled and disabled task list section flags`() = runTest {
+        sut.setTaskListSectionsEnabled(true)
+        coVerify { settingsLocalDataSource.setTaskListSectionsEnabled(true) }
+
+        sut.setTaskListSectionsEnabled(false)
+        coVerify { settingsLocalDataSource.setTaskListSectionsEnabled(false) }
     }
 
     private fun givenMoveUndoneTasksEnabled() {

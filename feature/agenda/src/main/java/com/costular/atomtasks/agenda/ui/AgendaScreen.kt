@@ -16,30 +16,25 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.costular.atomtasks.agenda.actions.TaskActionsResult
+import com.costular.atomtasks.core.ui.tasks.actions.TaskActionsResult
 import com.costular.atomtasks.core.ui.mvi.EventObserver
 import com.costular.atomtasks.core.ui.tasks.ItemPosition
 import com.costular.atomtasks.core.ui.tasks.TaskList
 import com.costular.atomtasks.core.ui.utils.DevicesPreview
-import com.costular.atomtasks.review.ui.ReviewHandler
+import com.costular.atomtasks.core.ui.tasks.TaskInteractionEffects
 import com.costular.atomtasks.tasks.model.Reminder
 import com.costular.atomtasks.tasks.model.Task
-import com.costular.atomtasks.tasks.removal.RemoveTaskConfirmationUiHandler
-import com.costular.atomtasks.tasks.removal.RecurringRemovalStrategy
 import com.costular.designsystem.components.CircularLoadingIndicator
 import com.costular.designsystem.dialogs.DatePickerDialog
 import com.costular.designsystem.theme.AppTheme
 import com.costular.designsystem.theme.AtomTheme
 import com.costular.designsystem.util.supportWideScreen
 import com.ramcosta.composedestinations.annotation.Destination
-import com.ramcosta.composedestinations.generated.agenda.destinations.TasksActionsBottomSheetDestination
-import com.ramcosta.composedestinations.result.NavResult
+import com.ramcosta.composedestinations.generated.taskactions.destinations.TasksActionsBottomSheetDestination
 import com.ramcosta.composedestinations.result.ResultRecipient
 import java.time.LocalDate
 import java.time.LocalTime
@@ -73,6 +68,7 @@ internal fun AgendaScreen(
     viewModel: AgendaViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val interactionState by viewModel.taskInteractionState.collectAsStateWithLifecycle()
 
     EventObserver(viewModel.uiEvents) { event ->
         when (event) {
@@ -94,16 +90,16 @@ internal fun AgendaScreen(
         setFabOnClick(viewModel::onCreateTask)
     }
 
-    HandleResultRecipients(
+    TaskInteractionEffects(
+        state = interactionState,
         resultRecipient = resultRecipient,
         onEdit = viewModel::onEditTask,
-        onDelete = viewModel::actionDelete,
+        onAskDelete = viewModel::askDelete,
         onMarkTask = viewModel::onMarkTask,
-    )
-
-    ReviewHandler(
-        shouldRequestReview = state.shouldShowReviewDialog,
-        onFinish = viewModel::onReviewFinished,
+        onDismissDelete = viewModel::dismissDelete,
+        onDelete = viewModel::deleteTask,
+        onDeleteRecurring = viewModel::deleteRecurringTask,
+        onReviewFinished = viewModel::onReviewFinished,
     )
 
     AgendaScreen(
@@ -111,9 +107,6 @@ internal fun AgendaScreen(
         onSelectDate = viewModel::setSelectedDay,
         onSelectToday = viewModel::setSelectedDayToday,
         onMarkTask = viewModel::onMarkTask,
-        deleteTask = viewModel::deleteTask,
-        deleteRecurringTask = viewModel::deleteRecurringTask,
-        dismissDelete = viewModel::dismissDelete,
         onClickOpenCalendarView = viewModel::openCalendarView,
         openTaskAction = { task ->
             viewModel.onOpenTaskActions()
@@ -129,43 +122,10 @@ internal fun AgendaScreen(
             viewModel.onEditTask(it.id)
         },
         onDeleteTask = {
-            viewModel.actionDelete(it.id)
+            viewModel.askDelete(it.id)
         },
         onDismissCalendarView = viewModel::dismissCalendarView,
     )
-}
-
-@Composable
-private fun HandleResultRecipients(
-    resultRecipient: ResultRecipient<TasksActionsBottomSheetDestination, TaskActionsResult>,
-    onEdit: (Long) -> Unit,
-    onDelete: (Long) -> Unit,
-    onMarkTask: (Long, Boolean) -> Unit,
-) {
-    resultRecipient.onNavResult { result ->
-        when (result) {
-            is NavResult.Canceled -> Unit
-            is NavResult.Value -> {
-                when (val response = result.value) {
-                    is TaskActionsResult.Remove -> {
-                        onDelete(response.taskId)
-                    }
-
-                    is TaskActionsResult.Edit -> {
-                        onEdit(response.taskId)
-                    }
-
-                    is TaskActionsResult.MarkAsNotDone -> {
-                        onMarkTask(response.taskId, false)
-                    }
-
-                    is TaskActionsResult.MarkAsDone -> {
-                        onMarkTask(response.taskId, true)
-                    }
-                }
-            }
-        }
-    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -178,22 +138,13 @@ fun AgendaScreen(
     onClickOpenCalendarView: () -> Unit,
     onDismissCalendarView: () -> Unit,
     onMarkTask: (Long, Boolean) -> Unit,
-    deleteTask: (id: Long) -> Unit,
-    deleteRecurringTask: (id: Long, strategy: RecurringRemovalStrategy) -> Unit,
-    dismissDelete: () -> Unit,
     openTaskDetail: (Task) -> Unit,
     openTaskAction: (Task) -> Unit,
     onDeleteTask: (Task) -> Unit,
     onDragTask: (ItemPosition, ItemPosition) -> Unit,
     onDragStopped: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    RemoveTaskConfirmationUiHandler(
-        uiState = state.removeTaskConfirmationUiState,
-        onDismiss = dismissDelete,
-        onDeleteRecurring = deleteRecurringTask,
-        onDelete = deleteTask,
-    )
-
     if (state.shouldShowCalendarView) {
         DatePickerDialog(
             onDismiss = onDismissCalendarView,
@@ -235,7 +186,7 @@ fun AgendaScreen(
     }
 
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier,
     ) {
         AgendaHeader(
             selectedDay = state.selectedDay,
@@ -286,21 +237,15 @@ private fun TasksContent(
     onDeleteTask: (Task) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val haptic = LocalHapticFeedback.current
 
     when (val tasks = state.tasks) {
         is TasksState.Success -> {
             TaskList(
                 onMove = onDragTask,
                 tasks = tasks.data,
+                sectionsEnabled = state.taskListSectionsEnabled,
                 onClick = onOpenTask,
-                onMarkTask = { taskId, isDone ->
-                    onMarkTask(taskId, isDone)
-
-                    if (isDone) {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    }
-                },
+                onMarkTask = onMarkTask,
                 padding = PaddingValues(
                     start = AppTheme.dimens.contentMargin,
                     end = AppTheme.dimens.contentMargin,
@@ -379,9 +324,6 @@ fun AgendaPreview() {
             onSelectDate = {},
             onSelectToday = {},
             onMarkTask = { _, _ -> },
-            deleteTask = {},
-            deleteRecurringTask = { _, _ -> },
-            dismissDelete = {},
             openTaskAction = {},
             onDragTask = { _, _ -> },
             onDragStopped = {},

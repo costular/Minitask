@@ -80,6 +80,7 @@ dependencies {
     implementation(projects.core.logging)
     implementation(project(":data"))
     implementation(project(":feature:agenda"))
+    implementation(projects.core.ui.tasks)
     implementation(project(":feature:settings"))
     implementation(projects.common.tasks)
     implementation(projects.feature.postponeTask)

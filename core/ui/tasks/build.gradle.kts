@@ -1,12 +1,17 @@
 plugins {
     id("atomtasks.android.library")
     id("atomtasks.android.library.compose")
+    id("atomtasks.android.hilt")
+    id("kotlin-parcelize")
     id("atomtasks.detekt")
     id("atomtasks.android.library.jacoco")
 }
 
 android {
     namespace = "com.costular.atomtasks.core.ui.tasks"
+    defaultConfig.testInstrumentationRunner = "com.costular.atomtasks.core.testing.AtomTestRunner"
+
+    ksp { arg("compose-destinations.moduleName", "taskactions") }
 
     packaging {
         resources.excludes.add("META-INF/LICENSE.md")
@@ -18,6 +23,18 @@ dependencies {
     implementation(projects.core.ui)
     implementation(projects.core.designsystem)
     implementation(projects.common.tasks)
+    implementation(projects.core.review)
+    implementation(projects.core.analytics)
+    implementation(libs.viewmodel)
+    implementation(libs.hilt.navigation.compose)
+    ksp(libs.compose.destinations.ksp)
+
+    testImplementation(projects.core.testing)
+    testImplementation(libs.junit)
+    testImplementation(libs.coroutines.test)
+    testImplementation(libs.truth)
+    testImplementation(libs.mockk)
+    testImplementation(libs.turbine)
 
     implementation(libs.androidx.core)
     implementation(libs.compose.runtime)

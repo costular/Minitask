@@ -7,6 +7,7 @@ import android.net.Uri
 data class SettingsState(
     val theme: Theme = Theme.System,
     val moveUndoneTasksTomorrowAutomatically: Boolean = true,
+    val taskListSectionsEnabled: Boolean = false,
     val dailyReminder: DailyReminder? = null,
     val isDailyReminderTimePickerOpen: Boolean = false,
     val shouldShowExactAlarmRationale: Boolean = false,

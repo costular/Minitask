@@ -11,7 +11,6 @@ import java.time.LocalTime
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapNotNull
 
 @Suppress("TooManyFunctions")
 internal class DefaultTasksRepository @Inject constructor(
@@ -56,7 +55,7 @@ internal class DefaultTasksRepository @Inject constructor(
 
     override fun getTaskById(id: Long): Flow<Task?> {
         return localDataSource.getTaskById(id)
-            .mapNotNull { it?.toDomain() }
+            .map { it?.toDomain() }
     }
 
     override fun getTasks(day: LocalDate?): Flow<List<Task>> {

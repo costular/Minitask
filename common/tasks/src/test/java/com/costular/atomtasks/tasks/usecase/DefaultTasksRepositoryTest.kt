@@ -33,6 +33,12 @@ class DefaultTasksRepositoryTest {
     }
 
     @Test
+    fun `missing task emits null rather than leaving callers waiting`() = runTest {
+        coEvery { localDataSource.getTaskById(47L) } returns flowOf(null)
+        assertThat(sut.getTaskById(47L).first()).isNull()
+    }
+
+    @Test
     fun `should call local data source add task when add task`() = runTest {
         val taskName = "task name"
         val taskDate = LocalDate.now()

@@ -7,6 +7,7 @@ import com.costular.atomtasks.core.ui.SnackbarManager
 import com.costular.atomtasks.data.settings.GetThemeUseCase
 import com.costular.atomtasks.data.settings.IsAutoforwardTasksSettingEnabledUseCase
 import com.costular.atomtasks.data.settings.SetAutoforwardTasksInteractor
+import com.costular.atomtasks.data.settings.SettingsRepository
 import com.costular.atomtasks.data.settings.SetThemeUseCase
 import com.costular.atomtasks.data.settings.Theme
 import com.costular.atomtasks.data.settings.dailyreminder.ObserveDailyReminderUseCase
@@ -17,6 +18,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlin.time.ExperimentalTime
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -34,6 +36,8 @@ class SettingsViewModelTest : MviViewModelTest() {
 
     private val getThemeUseCase: GetThemeUseCase = mockk(relaxed = true)
     private val setThemeUseCase: SetThemeUseCase = mockk(relaxed = true)
+    private val settingsRepository: SettingsRepository = mockk(relaxUnitFun = true)
+    private val taskListSectionsEnabled = MutableStateFlow(false)
     private val isAutoforwardTasksInteractor: IsAutoforwardTasksSettingEnabledUseCase =
         mockk(relaxed = true)
     private val setAutoforwardTasksInteractor: SetAutoforwardTasksInteractor = mockk(relaxed = true)
@@ -54,9 +58,11 @@ class SettingsViewModelTest : MviViewModelTest() {
 
     private fun initialize() {
         coEvery { areExactRemindersAvailable(Unit) } returns true
+        coEvery { settingsRepository.observeTaskListSectionsEnabled() } returns taskListSectionsEnabled
         sut = SettingsViewModel(
             getThemeUseCase = getThemeUseCase,
             setThemeUseCase = setThemeUseCase,
+            settingsRepository = settingsRepository,
             isAutoforwardTasksSettingEnabledUseCase = isAutoforwardTasksInteractor,
             setAutoforwardTasksInteractor = setAutoforwardTasksInteractor,
             atomAnalytics = atomAnalytics,
@@ -125,6 +131,34 @@ class SettingsViewModelTest : MviViewModelTest() {
         coVerify(exactly = 1) {
             setAutoforwardTasksInteractor(SetAutoforwardTasksInteractor.Params(isEnabled))
         }
+    }
+
+    @Test
+    fun `should observe task list section setting changes`() = runTest {
+        assertThat(sut.state.value.taskListSectionsEnabled).isFalse()
+
+        taskListSectionsEnabled.value = true
+        assertThat(sut.state.value.taskListSectionsEnabled).isTrue()
+
+        taskListSectionsEnabled.value = false
+        assertThat(sut.state.value.taskListSectionsEnabled).isFalse()
+    }
+
+    @Test
+    fun `should expose saved task list section setting when opening settings`() = runTest {
+        taskListSectionsEnabled.value = true
+        initialize()
+
+        assertThat(sut.state.value.taskListSectionsEnabled).isTrue()
+    }
+
+    @Test
+    fun `should save task list section setting in both directions`() = runTest {
+        sut.setTaskListSectionsEnabled(true)
+        coVerify(exactly = 1) { settingsRepository.setTaskListSectionsEnabled(true) }
+
+        sut.setTaskListSectionsEnabled(false)
+        coVerify(exactly = 1) { settingsRepository.setTaskListSectionsEnabled(false) }
     }
 
     private fun givenAutoforward(isEnabled: Boolean) {

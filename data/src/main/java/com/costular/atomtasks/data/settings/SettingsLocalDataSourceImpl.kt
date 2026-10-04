@@ -18,6 +18,18 @@ class SettingsLocalDataSourceImpl @Inject constructor(
     private val json: Json,
 ) : SettingsLocalDataSource {
 
+    private val preferenceTaskListSections = booleanPreferencesKey("task_list_sections_enabled")
+
+    override fun observeTaskListSectionsEnabled(): Flow<Boolean> = dataStore.data.map { preferences ->
+        preferences[preferenceTaskListSections] ?: false
+    }
+
+    override suspend fun setTaskListSectionsEnabled(isEnabled: Boolean) {
+        dataStore.edit { settings ->
+            settings[preferenceTaskListSections] = isEnabled
+        }
+    }
+
     private val preferenceTheme = stringPreferencesKey("theme")
     val theme: Flow<String> = dataStore.data
         .map { preferences ->

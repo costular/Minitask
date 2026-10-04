@@ -5,7 +5,7 @@ import com.costular.atomtasks.agenda.ui.AgendaNavigator
 import com.costular.atomtasks.feature.onboarding.OnboardingNavigator
 import com.costular.atomtasks.settings.SettingsNavigator
 import com.ramcosta.composedestinations.generated.agenda.destinations.AgendaScreenDestination
-import com.ramcosta.composedestinations.generated.agenda.destinations.TasksActionsBottomSheetDestination
+import com.ramcosta.composedestinations.generated.taskactions.destinations.TasksActionsBottomSheetDestination
 import com.ramcosta.composedestinations.generated.detail.destinations.TaskDetailScreenDestination
 import com.ramcosta.composedestinations.generated.onboarding.navgraphs.OnboardingNavGraph
 import com.ramcosta.composedestinations.generated.settings.destinations.ThemeSelectorScreenDestination

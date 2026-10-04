@@ -143,4 +143,18 @@
     <string name="settings_backup_loading">Procesando…</string>
     <string name="settings_backup_import_confirm_title">Restaurar copia de seguridad?</string>
     <string name="settings_backup_import_confirm_message">¡Importante! La restauración eliminará las tareas actuales y las reemplazará por la copia de seguridad. Esta acción no se puede deshacer.</string>
+    <string name="task_more_actions">Acciones de la tarea</string>
+    <string name="task_list_pending">Pendientes</string>
+    <string name="task_list_completed">Completadas</string>
+    <string name="task_list_section_count">%1$s (%2$d)</string>
+    <string name="task_list_expand_completed">Mostrar tareas completadas</string>
+    <string name="task_list_collapse_completed">Ocultar tareas completadas</string>
+    <string name="task_list_expanded">Expandido</string>
+    <string name="task_list_collapsed">Contraído</string>
+    <string name="task_list_no_pending">¡Todo al día!</string>
+    <string name="task_list_no_completed">Aún no hay tareas completadas</string>
+
+    <string name="settings_tasks_sections_title">Agrupar tareas completadas</string>
+    <string name="settings_tasks_sections_description">Muestra las tareas pendientes y completadas en secciones separadas.</string>
+
 </resources>

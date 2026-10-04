@@ -2,6 +2,7 @@ package com.costular.atomtasks.core.ui.tasks
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
@@ -42,7 +43,7 @@ class TaskListTest : AndroidTest() {
         val cancel = composeTestRule.getString(com.costular.atomtasks.core.ui.R.string.cancel)
 
         composeTestRule.setContent {
-            var showDeleteConfirmation by mutableStateOf(false)
+            var showDeleteConfirmation by remember { mutableStateOf(false) }
 
             if (showDeleteConfirmation) {
                 RemoveTaskDialog(

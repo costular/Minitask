@@ -7,6 +7,7 @@ import com.costular.atomtasks.notifications.TaskNotificationManager
 import com.costular.atomtasks.tasks.helper.TaskReminderManager
 import com.costular.atomtasks.tasks.model.RemoveTaskError
 import com.costular.atomtasks.tasks.repository.TasksRepository
+import kotlinx.coroutines.CancellationException
 import javax.inject.Inject
 
 class RemoveTaskUseCase @Inject constructor(
@@ -26,6 +27,8 @@ class RemoveTaskUseCase @Inject constructor(
             taskReminderManager.cancel(params.taskId)
             taskNotificationManager.removeTaskNotification(params.taskId)
             Either.Result(Unit)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             atomLog { e }
             Either.Error(RemoveTaskError.UnknownError)

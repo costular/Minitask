@@ -101,6 +101,7 @@ fun SettingsScreen(
         state = state,
         navigator = navigator,
         onUpdateAutoforwardTasks = viewModel::setAutoforwardTasksEnabled,
+        onUpdateTaskListSections = viewModel::setTaskListSectionsEnabled,
         onEnableDailyReminder = viewModel::updateDailyReminder,
         onClickDailyReminder = viewModel::clickOnDailyReminderTimePicker,
         onBackupLocal = { createDocumentLauncher.launch(DefaultBackupFilename) },
@@ -116,6 +117,7 @@ fun SettingsScreen(
     state: SettingsState,
     navigator: SettingsNavigator,
     onUpdateAutoforwardTasks: (Boolean) -> Unit,
+    onUpdateTaskListSections: (Boolean) -> Unit,
     onEnableDailyReminder: (Boolean) -> Unit,
     onClickDailyReminder: () -> Unit,
     onBackupLocal: () -> Unit,
@@ -145,6 +147,7 @@ fun SettingsScreen(
             state = state,
             navigator = navigator,
             onUpdateAutoforwardTasks = onUpdateAutoforwardTasks,
+            onUpdateTaskListSections = onUpdateTaskListSections,
             onEnableDailyReminder = onEnableDailyReminder,
             onClickDailyReminder = onClickDailyReminder,
             onBackupLocal = onBackupLocal,
@@ -153,6 +156,7 @@ fun SettingsScreen(
     }
 }
 
+@Suppress("LongParameterList")
 @Composable
 private fun SettingsContent(
     padding: androidx.compose.foundation.layout.PaddingValues,
@@ -160,6 +164,7 @@ private fun SettingsContent(
     state: SettingsState,
     navigator: SettingsNavigator,
     onUpdateAutoforwardTasks: (Boolean) -> Unit,
+    onUpdateTaskListSections: (Boolean) -> Unit,
     onEnableDailyReminder: (Boolean) -> Unit,
     onClickDailyReminder: () -> Unit,
     onBackupLocal: () -> Unit,
@@ -184,6 +189,8 @@ private fun SettingsContent(
 
         TasksSettingsSection(
             isMoveUndoneTasksTomorrowEnabled = state.moveUndoneTasksTomorrowAutomatically,
+            isTaskListSectionsEnabled = state.taskListSectionsEnabled,
+            onSetTaskListSections = onUpdateTaskListSections,
             onSetMoveUndoneTasksTomorrow = onUpdateAutoforwardTasks,
             dailyReminder = state.dailyReminder,
             onEnableDailyReminder = onEnableDailyReminder,
@@ -232,6 +239,7 @@ private fun SettingsScreenPreview() {
             state = SettingsState(),
             navigator = EmptySettingsNavigator,
             onUpdateAutoforwardTasks = {},
+            onUpdateTaskListSections = {},
             onEnableDailyReminder = {},
             onClickDailyReminder = {},
             onBackupLocal = {},

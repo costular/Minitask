@@ -5,6 +5,9 @@ import kotlinx.coroutines.flow.Flow
 import java.time.LocalTime
 
 interface SettingsRepository {
+    fun observeTaskListSectionsEnabled(): Flow<Boolean>
+    suspend fun setTaskListSectionsEnabled(isEnabled: Boolean)
+
     fun observeTheme(): Flow<Theme>
     suspend fun setTheme(theme: Theme)
     fun observeMoveUndoneTaskTomorrow(): Flow<Boolean>

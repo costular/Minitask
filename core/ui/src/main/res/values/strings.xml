@@ -165,4 +165,18 @@
     <string name="settings_backup_success">Backup created successfully</string>
     <string name="settings_restore_success">Backup restored successfully</string>
     <string name="settings_backup_loading">Processing…</string>
+    <string name="task_more_actions">Task actions</string>
+    <string name="task_list_pending">Pending</string>
+    <string name="task_list_completed">Completed</string>
+    <string name="task_list_section_count">%1$s (%2$d)</string>
+    <string name="task_list_expand_completed">Show completed tasks</string>
+    <string name="task_list_collapse_completed">Hide completed tasks</string>
+    <string name="task_list_expanded">Expanded</string>
+    <string name="task_list_collapsed">Collapsed</string>
+    <string name="task_list_no_pending">All caught up!</string>
+    <string name="task_list_no_completed">No completed tasks yet</string>
+
+    <string name="settings_tasks_sections_title">Group completed tasks</string>
+    <string name="settings_tasks_sections_description">Show pending and completed tasks in separate sections.</string>
+
 </resources>

@@ -8,7 +8,7 @@ import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
-import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasParent
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
@@ -57,14 +57,16 @@ class AgendaRobot(composeTestRule: ComposeTestRule) : Robot(composeTestRule) {
 
     fun clickOnTask(name: String, func: TaskActionRobot.() -> Unit): TaskActionRobot {
         composeTestRule.onNode(hasText(name))
-            .assert(hasParent(hasTestTag("AgendaTaskList")))
+            .assert(hasAnyAncestor(hasTestTag("AgendaTaskList")))
             .performClick()
 
         return TaskActionRobot(composeTestRule).apply(func)
     }
 
-    fun taskHasText(index: Int, text: String) {
-        taskAtIndex(index).assertTextEquals(text)
+    fun taskHasText(text: String) {
+        composeTestRule.onNodeWithText(text)
+            .assert(hasAnyAncestor(hasTestTag("AgendaTaskList")))
+            .assertIsDisplayed()
     }
 
     fun taskIsDone(taskName: String, isDone: Boolean) {

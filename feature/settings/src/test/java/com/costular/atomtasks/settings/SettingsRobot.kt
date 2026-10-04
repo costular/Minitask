@@ -11,6 +11,7 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import com.costular.atomtasks.core.testing.ui.ComposeProvider
 import com.costular.atomtasks.core.testing.ui.Robot
 import com.costular.atomtasks.core.testing.ui.getString
@@ -36,6 +37,16 @@ class SettingsRobot(composeTestRule: ComposeTestRule) : Robot(composeTestRule) {
         )
     }
 
+    private val taskListSectionsRow by lazy {
+        composeTestRule.onNodeWithText(composeTestRule.getString(R.string.settings_tasks_sections_title))
+    }
+    private val taskListSectionsSwitch by lazy {
+        composeTestRule.onNode(
+            hasParent(hasText(composeTestRule.getString(R.string.settings_tasks_sections_title)))
+                .and(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Switch)),
+        )
+    }
+
     init {
         settingsTitle.assertIsDisplayed()
     }
@@ -50,5 +61,21 @@ class SettingsRobot(composeTestRule: ComposeTestRule) : Robot(composeTestRule) {
 
     fun autoforwardTasksIsDisabled() {
         autoForwardSwitch.assertIsOff()
+    }
+
+    fun tapOnTaskListSectionsRow() {
+        taskListSectionsRow.performScrollTo().performClick()
+    }
+
+    fun tapOnTaskListSectionsSwitch() {
+        taskListSectionsSwitch.performScrollTo().performClick()
+    }
+
+    fun taskListSectionsIsEnabled() {
+        taskListSectionsSwitch.assertIsOn()
+    }
+
+    fun taskListSectionsIsDisabled() {
+        taskListSectionsSwitch.assertIsOff()
     }
 }

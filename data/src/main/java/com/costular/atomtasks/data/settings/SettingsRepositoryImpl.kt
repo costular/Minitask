@@ -11,6 +11,13 @@ class SettingsRepositoryImpl @Inject constructor(
     private val settingsLocalDataSource: SettingsLocalDataSource,
 ) : SettingsRepository {
 
+    override fun observeTaskListSectionsEnabled(): Flow<Boolean> =
+        settingsLocalDataSource.observeTaskListSectionsEnabled()
+
+    override suspend fun setTaskListSectionsEnabled(isEnabled: Boolean) {
+        settingsLocalDataSource.setTaskListSectionsEnabled(isEnabled)
+    }
+
     override fun observeTheme(): Flow<Theme> =
         settingsLocalDataSource.observeTheme().map { Theme.fromString(it) }
 

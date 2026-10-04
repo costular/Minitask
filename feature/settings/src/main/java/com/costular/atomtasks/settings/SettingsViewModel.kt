@@ -16,6 +16,7 @@ import com.costular.atomtasks.data.backup.ImportBackupUseCase
 import com.costular.atomtasks.data.settings.GetThemeUseCase
 import com.costular.atomtasks.data.settings.IsAutoforwardTasksSettingEnabledUseCase
 import com.costular.atomtasks.data.settings.SetAutoforwardTasksInteractor
+import com.costular.atomtasks.data.settings.SettingsRepository
 import com.costular.atomtasks.data.settings.SetThemeUseCase
 import com.costular.atomtasks.data.settings.Theme
 import com.costular.atomtasks.data.settings.dailyreminder.ObserveDailyReminderUseCase
@@ -37,6 +38,7 @@ import kotlinx.coroutines.launch
 class SettingsViewModel @Inject constructor(
     private val getThemeUseCase: GetThemeUseCase,
     private val setThemeUseCase: SetThemeUseCase,
+    private val settingsRepository: SettingsRepository,
     private val isAutoforwardTasksSettingEnabledUseCase: IsAutoforwardTasksSettingEnabledUseCase,
     private val setAutoforwardTasksInteractor: SetAutoforwardTasksInteractor,
     private val getDailyReminderUseCase: ObserveDailyReminderUseCase,
@@ -52,6 +54,7 @@ class SettingsViewModel @Inject constructor(
     init {
         observeTheme()
         observeAutoforwardTasks()
+        observeTaskListSections()
         observeDailyReminder()
         checkExactAlarmPermission()
     }
@@ -134,6 +137,20 @@ class SettingsViewModel @Inject constructor(
                         state.value.dailyReminder?.isEnabled == true
                 )
             }
+        }
+    }
+
+    private fun observeTaskListSections() {
+        viewModelScope.launch {
+            settingsRepository.observeTaskListSectionsEnabled().collectLatest { enabled ->
+                setState { copy(taskListSectionsEnabled = enabled) }
+            }
+        }
+    }
+
+    fun setTaskListSectionsEnabled(isEnabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setTaskListSectionsEnabled(isEnabled)
         }
     }
 

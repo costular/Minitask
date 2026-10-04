@@ -21,6 +21,7 @@ class SettingsScreenTest : ComposeProvider {
     override val composeTestRule = createComposeRule()
 
     private val onUpdateAutoforwardTasks: (Boolean) -> Unit = mockk(relaxed = true)
+    private val onUpdateTaskListSections: (Boolean) -> Unit = mockk(relaxed = true)
 
     @Before
     @Throws(Exception::class)
@@ -80,12 +81,37 @@ class SettingsScreenTest : ComposeProvider {
         }
     }
 
+    @Test
+    fun `should show disabled grouping and enable it when tapping the setting row`() {
+        givenSettingsScreen(SettingsState(taskListSectionsEnabled = false))
+
+        settings {
+            taskListSectionsIsDisabled()
+            tapOnTaskListSectionsRow()
+        }
+
+        verify(exactly = 1) { onUpdateTaskListSections(true) }
+    }
+
+    @Test
+    fun `should show enabled grouping and disable it when tapping the switch`() {
+        givenSettingsScreen(SettingsState(taskListSectionsEnabled = true))
+
+        settings {
+            taskListSectionsIsEnabled()
+            tapOnTaskListSectionsSwitch()
+        }
+
+        verify(exactly = 1) { onUpdateTaskListSections(false) }
+    }
+
     private fun givenSettingsScreen(state: SettingsState = SettingsState.Empty) {
         composeTestRule.setContent {
             SettingsScreen(
                 state = state,
                 navigator = EmptySettingsNavigator,
                 onUpdateAutoforwardTasks = onUpdateAutoforwardTasks,
+                onUpdateTaskListSections = onUpdateTaskListSections,
                 onEnableDailyReminder = {},
                 onClickDailyReminder = {},
                 onBackupLocal = {},

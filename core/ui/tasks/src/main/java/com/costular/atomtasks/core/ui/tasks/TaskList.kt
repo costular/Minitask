@@ -1,16 +1,11 @@
 package com.costular.atomtasks.core.ui.tasks
 
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
-import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -20,31 +15,32 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SwipeToDismissBox
-import androidx.compose.material3.SwipeToDismissBoxState
-import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.view.HapticFeedbackConstantsCompat
 import com.costular.atomtasks.core.ui.R
 import com.costular.atomtasks.core.ui.utils.VariantsPreview
 import com.costular.atomtasks.tasks.model.Reminder
@@ -53,11 +49,10 @@ import com.costular.designsystem.theme.AppTheme
 import com.costular.designsystem.theme.AtomTheme
 import java.time.LocalDate
 import java.time.LocalTime
-import kotlinx.coroutines.launch
-import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.ReorderableLazyListState
 import sh.calvin.reorderable.rememberReorderableLazyListState
 
+@Suppress("LongMethod")
 @Composable
 fun TaskList(
     tasks: List<Task>,
@@ -69,17 +64,28 @@ fun TaskList(
     onDragStopped: () -> Unit,
     modifier: Modifier = Modifier,
     lazyListState: LazyListState = rememberLazyListState(),
-    reorderableLazyListState: ReorderableLazyListState = rememberReorderableLazyListState(
-        lazyListState = lazyListState,
-        onMove = { from, to ->
-            onMove(
-                ItemPosition(from.index, from.key as Long),
-                ItemPosition(to.index, to.key as Long),
-            )
-        }
-    ),
     padding: PaddingValues = PaddingValues(0.dp),
+    reorderingEnabled: Boolean = true,
+    sectionsEnabled: Boolean = false,
 ) {
+    val sections = remember(sectionsEnabled) {
+        if (sectionsEnabled) TaskListSections(tasks) else null
+    }
+    var completedExpanded by rememberSaveable { mutableStateOf(true) }
+    val latestTasks by rememberUpdatedState(tasks)
+    val latestOnMove by rememberUpdatedState(onMove)
+    val reorderState = rememberReorderableLazyListState(lazyListState) { from, to ->
+        taskListMove(latestTasks, from.key, to.key, sections)
+            ?.let { (source, target) -> latestOnMove(source, target) }
+    }
+    SideEffect {
+        sections?.synchronize(
+            tasks,
+            lazyListState.layoutInfo.visibleItemsInfo.mapNotNull { it.key as? Long }.toSet(),
+        )
+    }
+    val (completed, pending) = tasks.partition { sections?.isCompleted(it) == true }
+
     if (tasks.isEmpty()) {
         Empty(modifier.padding(AppTheme.dimens.contentMargin))
     } else {
@@ -89,124 +95,167 @@ fun TaskList(
             contentPadding = padding,
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            items(tasks, key = { it.id }) { task ->
-                TaskItem(
-                    state = reorderableLazyListState,
+            if (sectionsEnabled) {
+                item(key = "pending_header", contentType = "header") {
+                    PendingTasksHeader(pending.size, Modifier.fillMaxWidth().animateItem())
+                }
+                if (pending.isEmpty()) {
+                    item(key = "pending_empty", contentType = "empty") {
+                        SectionEmpty(stringResource(R.string.task_list_no_pending), Modifier.animateItem())
+                    }
+                }
+            }
+            // Keep task IDs as keys across both sections so Compose animates their movement.
+            val rowContent: @Composable LazyItemScope.(Task) -> Unit = { task ->
+                TaskListRow(
                     task = task,
-                    onDeleteTask = onDeleteTask,
-                    onMarkTask = onMarkTask,
+                    state = reorderState,
+                    reorderingEnabled = reorderingEnabled,
                     onClick = onClick,
                     onClickMore = onClickMore,
+                    onDeleteTask = onDeleteTask,
+                    onMarkTask = onMarkTask,
                     onDragStopped = onDragStopped,
+                    onCompletionAnimationFinished = { isDone ->
+                        sections?.finishAnimation(task.id, isDone, latestTasks)
+                    },
                 )
+            }
+            items(
+                if (sectionsEnabled) pending else tasks,
+                key = { it.id },
+                contentType = { "task" },
+                itemContent = rowContent,
+            )
+            if (sectionsEnabled) {
+                item(key = "completed_header", contentType = "header") {
+                    CompletedTasksHeader(
+                        count = completed.size,
+                        expanded = completedExpanded,
+                        onToggle = { completedExpanded = !completedExpanded },
+                        modifier = Modifier.fillMaxWidth().animateItem(),
+                    )
+                }
+                if (completedExpanded) {
+                    if (completed.isEmpty()) {
+                        item(key = "completed_empty", contentType = "empty") {
+                            SectionEmpty(stringResource(R.string.task_list_no_completed), Modifier.animateItem())
+                        }
+                    }
+                    items(completed, key = { it.id }, contentType = { "task" }, itemContent = rowContent)
+                }
             }
         }
     }
 }
 
 @Composable
-private fun LazyItemScope.TaskItem(
-    state: ReorderableLazyListState,
+private fun LazyItemScope.TaskListRow(
     task: Task,
-    onDeleteTask: (Task) -> Unit,
-    onMarkTask: (taskId: Long, isDone: Boolean) -> Unit,
+    state: ReorderableLazyListState,
+    reorderingEnabled: Boolean,
     onClick: (Task) -> Unit,
     onClickMore: (Task) -> Unit,
+    onDeleteTask: (Task) -> Unit,
+    onMarkTask: (Long, Boolean) -> Unit,
     onDragStopped: () -> Unit,
+    modifier: Modifier = Modifier,
+    onCompletionAnimationFinished: (Boolean) -> Unit = {},
 ) {
-    val view = LocalView.current
-    val dismissState = rememberSwipeToDismissBoxState()
-    val interactionSource = remember { MutableInteractionSource() }
-    val coroutineScope = rememberCoroutineScope()
-
-    ReorderableItem(state, key = task.id) { isDragging ->
-        SwipeToDismissBox(
-            state = dismissState,
-            enableDismissFromEndToStart = true,
-            enableDismissFromStartToEnd = false,
-            backgroundContent = {
-                TaskRemoveBackground(dismissState)
-            },
-            onDismiss = { direction ->
-                if (direction == SwipeToDismissBoxValue.EndToStart) {
-                    onDeleteTask(task)
-                    coroutineScope.launch {
-                        dismissState.reset()
-                    }
-                }
-            },
-        ) {
-            TaskCard(
-                title = task.name,
-                onMark = { onMarkTask(task.id, it) },
-                onClick = { onClick(task) },
-                reminder = task.reminder,
-                isFinished = task.isDone,
-                recurrenceType = task.recurrenceType,
-                interactionSource = interactionSource,
-                modifier = Modifier
-                    .longPressDraggableHandle(
-                        interactionSource = interactionSource,
-                        onDragStarted = {
-                            view.performHapticFeedback(HapticFeedbackConstantsCompat.LONG_PRESS)
-                        },
-                        onDragStopped = {
-                            view.performHapticFeedback(HapticFeedbackConstantsCompat.GESTURE_END)
-                            onDragStopped()
-                        },
-                    ),
-                onClickMore = { onClickMore(task) },
-            )
-        }
+    if (reorderingEnabled) {
+        ReorderableTaskRow(
+            state = state,
+            task = task,
+            onClick = onClick,
+            onClickMore = onClickMore,
+            onDeleteTask = onDeleteTask,
+            onMarkTask = onMarkTask,
+            onDragStopped = onDragStopped,
+            modifier = modifier,
+            onCompletionAnimationFinished = onCompletionAnimationFinished,
+        )
+    } else {
+        TaskRow(
+            task = task,
+            onClick = onClick,
+            onClickMore = onClickMore,
+            onDeleteTask = onDeleteTask,
+            onMarkTask = onMarkTask,
+            modifier = modifier.animateItem(),
+            onCompletionAnimationFinished = onCompletionAnimationFinished,
+        )
     }
 }
 
 @Composable
-private fun TaskRemoveBackground(
-    state: SwipeToDismissBoxState,
-) {
-    val view = LocalView.current
-    val scale by
-    animateFloatAsState(
-        targetValue = if (state.targetValue == SwipeToDismissBoxValue.Settled) 0.75f else 1f,
-        animationSpec = tween(
-            durationMillis = 200,
-            easing = FastOutSlowInEasing,
-        )
+private fun PendingTasksHeader(count: Int, modifier: Modifier = Modifier) {
+    ListItem(
+        headlineContent = {
+            Text(
+                stringResource(R.string.task_list_section_count, stringResource(R.string.task_list_pending), count),
+                style = MaterialTheme.typography.titleSmall,
+            )
+        },
+        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+        modifier = modifier.semantics { heading() },
     )
+}
 
-    val swipeTargetValue by remember {
-        derivedStateOf { state.targetValue }
-    }
+private const val ExpandedChevronRotation = 180f
 
-    LaunchedEffect(swipeTargetValue) {
-        if (state.targetValue == SwipeToDismissBoxValue.EndToStart) {
-            view.performHapticFeedback(HapticFeedbackConstantsCompat.GESTURE_START)
-        }
-    }
+@Composable
+private fun CompletedTasksHeader(
+    count: Int,
+    expanded: Boolean,
+    onToggle: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val action = stringResource(
+        if (expanded) R.string.task_list_collapse_completed else R.string.task_list_expand_completed,
+    )
+    val expandedDescription = stringResource(
+        if (expanded) R.string.task_list_expanded else R.string.task_list_collapsed,
+    )
+    val rotation = animateFloatAsState(
+        if (expanded) ExpandedChevronRotation else 0f,
+        label = "Completed section chevron",
+    )
+    ListItem(
+        modifier = modifier
+            .clickable(role = Role.Button, onClickLabel = action, onClick = onToggle)
+            .semantics {
+                heading()
+                stateDescription = expandedDescription
+            },
+        headlineContent = {
+            Text(
+                stringResource(
+                    R.string.task_list_section_count,
+                    stringResource(R.string.task_list_completed),
+                    count,
+                ),
+                style = MaterialTheme.typography.titleSmall,
+            )
+        },
+        trailingContent = {
+            Icon(
+                Icons.Outlined.ExpandMore,
+                contentDescription = null,
+                modifier = Modifier.graphicsLayer { rotationZ = rotation.value },
+            )
+        },
+        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+    )
+}
 
-    val (backgroundColor, contentColor) = when (state.dismissDirection) {
-        SwipeToDismissBoxValue.Settled -> Color.Transparent to Color.Transparent
-        SwipeToDismissBoxValue.StartToEnd -> Color.Transparent to Color.Transparent
-        SwipeToDismissBoxValue.EndToStart -> {
-            MaterialTheme.colorScheme.error to MaterialTheme.colorScheme.onError
-        }
-    }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(backgroundColor, CardDefaults.elevatedShape)
-            .padding(AppTheme.dimens.contentMargin),
-        contentAlignment = Alignment.CenterEnd,
-    ) {
-        Icon(
-            imageVector = Icons.Default.Delete,
-            contentDescription = null,
-            tint = contentColor,
-            modifier = Modifier.scale(scale),
-        )
-    }
+@Composable
+private fun SectionEmpty(text: String, modifier: Modifier = Modifier) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+    )
 }
 
 @Composable
@@ -304,6 +353,7 @@ private fun TaskListPreview() {
             onDeleteTask = {},
             onMove = { _, _ -> },
             onDragStopped = {},
+            sectionsEnabled = true,
         )
     }
 }

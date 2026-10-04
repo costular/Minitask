@@ -1,4 +1,4 @@
-package com.costular.atomtasks.agenda.actions
+package com.costular.atomtasks.core.ui.tasks.actions
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -23,7 +23,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import com.costular.atomtasks.agenda.ui.AgendaGraph
 import com.costular.atomtasks.core.ui.R
 import com.costular.designsystem.components.ActionItem
 import com.costular.designsystem.components.Draggable
@@ -34,7 +33,7 @@ import com.ramcosta.composedestinations.bottomsheet.spec.DestinationStyleBottomS
 import com.ramcosta.composedestinations.result.EmptyResultBackNavigator
 import com.ramcosta.composedestinations.result.ResultBackNavigator
 
-@Destination<AgendaGraph>(style = DestinationStyleBottomSheet::class)
+@Destination<TaskActionsGraph>(start = true, style = DestinationStyleBottomSheet::class)
 @Composable
 fun ColumnScope.TasksActionsBottomSheet(
     result: ResultBackNavigator<TaskActionsResult>,

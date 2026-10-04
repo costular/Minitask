@@ -2,36 +2,24 @@ package com.costular.atomtasks.agenda.ui
 
 import androidx.lifecycle.viewModelScope
 import com.costular.atomtasks.agenda.analytics.AgendaAnalytics
-import com.costular.atomtasks.agenda.analytics.AgendaAnalytics.CancelDelete
 import com.costular.atomtasks.agenda.analytics.AgendaAnalytics.CollapseCalendar
-import com.costular.atomtasks.agenda.analytics.AgendaAnalytics.ConfirmDelete
 import com.costular.atomtasks.agenda.analytics.AgendaAnalytics.ExpandCalendar
-import com.costular.atomtasks.agenda.analytics.AgendaAnalytics.MarkTaskAsDone
-import com.costular.atomtasks.agenda.analytics.AgendaAnalytics.MarkTaskAsNotDone
 import com.costular.atomtasks.agenda.analytics.AgendaAnalytics.NavigateToDay
 import com.costular.atomtasks.agenda.analytics.AgendaAnalytics.OrderTask
 import com.costular.atomtasks.agenda.analytics.AgendaAnalytics.SelectToday
-import com.costular.atomtasks.agenda.analytics.AgendaAnalytics.ShowConfirmDeleteDialog
 import com.costular.atomtasks.analytics.AtomAnalytics
-import com.costular.atomtasks.core.ui.AppSnackbarMessage
-import com.costular.atomtasks.core.ui.R
-import com.costular.atomtasks.core.ui.SnackbarManager
 import com.costular.atomtasks.core.ui.date.asDay
 import com.costular.atomtasks.core.ui.mvi.MviViewModel
+import com.costular.atomtasks.core.ui.tasks.TaskInteractionStateHolder
+import com.costular.atomtasks.tasks.removal.RecurringRemovalStrategy
 import com.costular.atomtasks.core.ui.tasks.ItemPosition
 import com.costular.atomtasks.core.usecase.EmptyParams
+import com.costular.atomtasks.data.settings.SettingsRepository
 import com.costular.atomtasks.data.tutorial.ShouldShowOnboardingUseCase
 import com.costular.atomtasks.data.tutorial.ShouldShowTaskOrderTutorialUseCase
 import com.costular.atomtasks.data.tutorial.TaskOrderTutorialDismissedUseCase
-import com.costular.atomtasks.review.usecase.ShouldAskReviewUseCase
-import com.costular.atomtasks.tasks.helper.AutoforwardManager
-import com.costular.atomtasks.tasks.helper.recurrence.RecurrenceScheduler
-import com.costular.atomtasks.tasks.removal.RecurringRemovalStrategy
-import com.costular.atomtasks.tasks.removal.RemoveTaskConfirmationUiState
-import com.costular.atomtasks.tasks.removal.RemoveTaskUseCase
 import com.costular.atomtasks.tasks.usecase.MoveTaskUseCase
 import com.costular.atomtasks.tasks.usecase.ObserveTasksUseCase
-import com.costular.atomtasks.tasks.usecase.UpdateTaskIsDoneUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.LocalDate
 import javax.inject.Inject
@@ -45,28 +33,38 @@ import kotlinx.coroutines.launch
 @HiltViewModel
 class AgendaViewModel @Inject constructor(
     private val observeTasksUseCase: ObserveTasksUseCase,
-    private val updateTaskIsDoneUseCase: UpdateTaskIsDoneUseCase,
-    private val removeTaskUseCase: RemoveTaskUseCase,
-    private val autoforwardManager: AutoforwardManager,
     private val moveTaskUseCase: MoveTaskUseCase,
     private val atomAnalytics: AtomAnalytics,
     private val shouldShowTaskOrderTutorialUseCase: ShouldShowTaskOrderTutorialUseCase,
     private val taskOrderTutorialDismissedUseCase: TaskOrderTutorialDismissedUseCase,
-    private val shouldShowAskReviewUseCase: ShouldAskReviewUseCase,
-    private val recurrenceScheduler: RecurrenceScheduler,
     private val shouldShowOnboardingUseCase: ShouldShowOnboardingUseCase,
-    private val snackbarManager: SnackbarManager,
+    private val settingsRepository: SettingsRepository,
+    taskInteractionFactory: TaskInteractionStateHolder.Factory,
 ) : MviViewModel<AgendaState>(AgendaState()) {
+    private val taskInteractions = taskInteractionFactory.create(viewModelScope)
+    val taskInteractionState = taskInteractions.state
+
+    fun onMarkTask(taskId: Long, isDone: Boolean) = taskInteractions.onMarkTask(taskId, isDone)
+    fun askDelete(taskId: Long) = taskInteractions.askDelete(taskId)
+    fun dismissDelete() = taskInteractions.dismissDelete()
+    fun deleteTask(taskId: Long) = taskInteractions.deleteTask(taskId)
+    fun deleteRecurringTask(taskId: Long, strategy: RecurringRemovalStrategy) =
+        taskInteractions.deleteRecurringTask(taskId, strategy)
+    fun onReviewFinished() = taskInteractions.onReviewFinished()
+
     init {
         shouldShowOnboarding()
         loadTasks()
-        scheduleAutoforwardTasks()
-        initializeRecurrenceScheduler()
         retrieveTutorials()
+        observeTaskListSections()
     }
 
-    private fun initializeRecurrenceScheduler() {
-        recurrenceScheduler.initialize()
+    private fun observeTaskListSections() {
+        viewModelScope.launch {
+            settingsRepository.observeTaskListSectionsEnabled().collect { enabled ->
+                setState { copy(taskListSectionsEnabled = enabled) }
+            }
+        }
     }
 
     private fun shouldShowOnboarding() {
@@ -87,12 +85,6 @@ class AgendaViewModel @Inject constructor(
                 .collect {
                     setState { copy(shouldShowCardOrderTutorial = it) }
                 }
-        }
-    }
-
-    private fun scheduleAutoforwardTasks() {
-        viewModelScope.launch {
-            autoforwardManager.scheduleOrCancelAutoforwardTasks()
         }
     }
 
@@ -127,93 +119,24 @@ class AgendaViewModel @Inject constructor(
         }
     }
 
-    fun onMarkTask(taskId: Long, isDone: Boolean) = viewModelScope.launch {
-        updateTaskIsDoneUseCase(UpdateTaskIsDoneUseCase.Params(taskId, isDone)).fold(
-            ifError = {
-                sendGenericError()
-            },
-            ifResult = {
-                checkIfReviewShouldBeShown(isDone)
-                showSnackbar(
-                    if (isDone) {
-                        R.string.task_feedback_completed
-                    } else {
-                        R.string.task_feedback_reopened
-                    }
-                )
-
-                val event = if (isDone) {
-                    MarkTaskAsDone
-                } else {
-                    MarkTaskAsNotDone
-                }
-                atomAnalytics.track(event)
-            }
-        )
-    }
-
-    private suspend fun checkIfReviewShouldBeShown(isDone: Boolean) {
-        if (isDone) {
-            val result = shouldShowAskReviewUseCase(Unit)
-            result.fold(
-                ifError = {
-                    Unit
-                },
-                ifResult = {
-                    setState { copy(shouldShowReviewDialog = it) }
-                }
-            )
-        }
-    }
-
-    fun onReviewFinished() {
-        setState { copy(shouldShowReviewDialog = false) }
-    }
-
-    fun actionDelete(id: Long) {
-        val tasks = state.value.tasks
-
-        if (tasks !is TasksState.Success) {
-            return
-        }
-
-        val task = tasks.data.find { it.id == id }
-        setState {
-            copy(
-                removeTaskConfirmationUiState = RemoveTaskConfirmationUiState.Shown(
-                    taskId = id,
-                    isRecurring = task?.isRecurring == true,
-                )
-            )
-        }
-
-        atomAnalytics.track(ShowConfirmDeleteDialog)
-    }
-
-    fun deleteTask(id: Long) {
-        deleteTaskConfirmed(taskId = id, strategy = null)
-    }
-
-    fun deleteRecurringTask(id: Long, recurringRemovalStrategy: RecurringRemovalStrategy) {
-        deleteTaskConfirmed(taskId = id, strategy = recurringRemovalStrategy)
-    }
-
     fun onDragTask(from: ItemPosition, to: ItemPosition) {
         val data = state.value
         val tasks = data.tasks
 
         if (tasks is TasksState.Success) {
-            val toTask = tasks.data.first { it.id == to.key }
-            val fromTask = tasks.data.first { it.id == from.key }
-
-            if (from.index < 0 || to.index < 0) return
+            val fromIndex = tasks.data.indexOfFirst { it.id == from.key }
+            val toIndex = tasks.data.indexOfFirst { it.id == to.key }
+            if (fromIndex < 0 || toIndex < 0) return
+            val fromTask = tasks.data[fromIndex]
+            // Positions are persistent slots, while list indices change throughout a drag.
+            val targetPosition = tasks.data.map { it.position }.sorted()[toIndex]
 
             setState {
                 copy(
-                    fromToPositions = Pair(fromTask.position, toTask.position),
+                    fromToPositions = Pair(fromTask.position, targetPosition),
                     tasks = TasksState.Success(
                         tasks.data.toMutableList().apply {
-                            add(from.index, removeAt(to.index))
+                            add(toIndex, removeAt(fromIndex))
                         }.toImmutableList(),
                     ),
                 )
@@ -240,11 +163,6 @@ class AgendaViewModel @Inject constructor(
             }
             atomAnalytics.track(OrderTask)
         }
-    }
-
-    fun dismissDelete() {
-        hideAskDelete()
-        atomAnalytics.track(CancelDelete)
     }
 
     fun toggleHeader() {
@@ -274,52 +192,6 @@ class AgendaViewModel @Inject constructor(
 
     fun onOpenTaskActions() {
         atomAnalytics.track(AgendaAnalytics.OpenTaskActions)
-    }
-
-    private fun hideAskDelete() {
-        setState { copy(removeTaskConfirmationUiState = RemoveTaskConfirmationUiState.Hidden) }
-    }
-
-    private fun deleteTaskConfirmed(
-        taskId: Long,
-        strategy: RecurringRemovalStrategy?,
-    ) {
-        hideAskDelete()
-        viewModelScope.launch {
-            removeTaskUseCase(
-                RemoveTaskUseCase.Params(
-                    taskId = taskId,
-                    strategy = strategy,
-                )
-            ).fold(
-                ifError = {
-                    sendGenericError()
-                },
-                ifResult = {
-                    showSnackbar(deleteMessageFor(strategy))
-                    atomAnalytics.track(ConfirmDelete)
-                }
-            )
-        }
-    }
-
-    private fun deleteMessageFor(strategy: RecurringRemovalStrategy?): Int = when (strategy) {
-        RecurringRemovalStrategy.SINGLE_AND_FUTURE_ONES -> R.string.task_feedback_deleted_future
-        RecurringRemovalStrategy.FUTURE_ONES -> R.string.task_feedback_deleted_future
-        RecurringRemovalStrategy.ALL -> R.string.task_feedback_deleted_all
-        RecurringRemovalStrategy.SINGLE, null -> R.string.task_feedback_deleted
-    }
-
-    private fun sendGenericError() {
-        showSnackbar(R.string.error_generic)
-    }
-
-    private fun showSnackbar(messageRes: Int) {
-        snackbarManager.showMessage(
-            AppSnackbarMessage(
-                messageRes = messageRes,
-            )
-        )
     }
 
     fun onCreateTask() {

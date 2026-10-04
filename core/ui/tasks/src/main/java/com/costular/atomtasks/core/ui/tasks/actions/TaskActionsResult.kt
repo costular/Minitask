@@ -1,4 +1,4 @@
-package com.costular.atomtasks.agenda.actions
+package com.costular.atomtasks.core.ui.tasks.actions
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize

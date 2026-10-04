@@ -2,7 +2,7 @@ package com.costular.atomtasks.core.ui.tasks
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutLinearInEasing
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -29,13 +29,17 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.text.TextLayoutResult
@@ -45,6 +49,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.costular.atomtasks.core.ui.R
 import com.costular.atomtasks.core.ui.utils.ofLocalizedTime
 import com.costular.atomtasks.tasks.fake.TaskFinished
 import com.costular.atomtasks.tasks.fake.TaskRecurring
@@ -74,13 +79,10 @@ fun TaskCard(
     onClickMore: () -> Unit,
     modifier: Modifier = Modifier,
     interactionSource: MutableInteractionSource? = null,
+    onCompletionAnimationFinished: (Boolean) -> Unit = {},
 ) {
     val contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-    val shouldShowExtraDetails = remember(
-        isFinished,
-        reminder,
-        recurrenceType
-    ) { !isFinished && (reminder != null || recurrenceType != null) }
+    val shouldShowExtraDetails = !isFinished && (reminder != null || recurrenceType != null)
 
     ElevatedCard(
         onClick = onClick,
@@ -107,7 +109,11 @@ fun TaskCard(
             Column(
                 modifier = Modifier.weight(1f),
             ) {
-                TaskTitle(isFinished = isFinished, title = title)
+                TaskTitle(
+                    isFinished = isFinished,
+                    title = title,
+                    onAnimationFinished = onCompletionAnimationFinished,
+                )
 
                 if (shouldShowExtraDetails) {
                     Spacer(Modifier.height(AppTheme.dimens.spacingSmall))
@@ -130,7 +136,10 @@ fun TaskCard(
                     .align(Alignment.Top)
                     .padding(end = AppTheme.dimens.spacingSmall)
             ) {
-                Icon(imageVector = Icons.Outlined.MoreVert, contentDescription = null)
+                Icon(
+                    imageVector = Icons.Outlined.MoreVert,
+                    contentDescription = stringResource(R.string.task_more_actions),
+                )
             }
         }
     }
@@ -207,14 +216,29 @@ private fun ColumnScope.TaskDetails(
 }
 
 @Composable
-private fun TaskTitle(isFinished: Boolean, title: String) {
+private fun TaskTitle(
+    isFinished: Boolean,
+    title: String,
+    modifier: Modifier = Modifier,
+    onAnimationFinished: (Boolean) -> Unit = {},
+) {
     var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
 
-    val progress by animateFloatAsState(
-        targetValue = if (isFinished) 1f else 0f,
-        animationSpec = tween(durationMillis = 200, easing = FastOutLinearInEasing),
-        label = "Task strike through"
-    )
+    val progress = remember { Animatable(if (isFinished) 1f else 0f) }
+    val latestOnAnimationFinished by rememberUpdatedState(onAnimationFinished)
+    val latestIsFinished by rememberUpdatedState(isFinished)
+
+    LaunchedEffect(isFinished) {
+        progress.animateTo(
+            targetValue = if (isFinished) 1f else 0f,
+            animationSpec = tween(durationMillis = 200, easing = FastOutLinearInEasing),
+        )
+        latestOnAnimationFinished(isFinished)
+    }
+    // A row leaving the viewport must not leave a section transition waiting on an invisible title.
+    DisposableEffect(Unit) {
+        onDispose { latestOnAnimationFinished(latestIsFinished) }
+    }
 
     Text(
         text = title,
@@ -222,12 +246,12 @@ private fun TaskTitle(isFinished: Boolean, title: String) {
             textLayoutResult = it
         },
         style = MaterialTheme.typography.titleMedium,
-        modifier = Modifier.strikeThrough(
+        modifier = modifier.strikeThrough(
             color = LocalContentColor.current,
             border = 2.dp,
-            progress = { progress },
+            progress = { progress.value },
             textLayoutResult = textLayoutResult,
-            enabled = isFinished,
+            enabled = true,
         )
     )
 }

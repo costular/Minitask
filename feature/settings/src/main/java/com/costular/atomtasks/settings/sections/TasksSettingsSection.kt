@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Alarm
 import androidx.compose.material.icons.outlined.FastForward
+import androidx.compose.material.icons.outlined.ViewList
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -30,6 +31,8 @@ import java.time.LocalTime
 fun TasksSettingsSection(
     isMoveUndoneTasksTomorrowEnabled: Boolean,
     dailyReminder: DailyReminder?,
+    isTaskListSectionsEnabled: Boolean,
+    onSetTaskListSections: (Boolean) -> Unit,
     onEnableDailyReminder: (Boolean) -> Unit,
     onClickDailyReminder: () -> Unit,
     onSetMoveUndoneTasksTomorrow: (Boolean) -> Unit,
@@ -57,6 +60,13 @@ fun TasksSettingsSection(
         AutoPostponeItem(
             isMoveUndoneTasksTomorrowEnabled = isMoveUndoneTasksTomorrowEnabled,
             onSetMoveUndoneTasksTomorrow = onSetMoveUndoneTasksTomorrow,
+        )
+
+        SettingDivider()
+
+        TaskListSectionsItem(
+            isEnabled = isTaskListSectionsEnabled,
+            onSetTaskListSections = onSetTaskListSections,
         )
     }
 }
@@ -125,6 +135,39 @@ private fun AutoPostponeItem(
     )
 }
 
+@Composable
+private fun TaskListSectionsItem(
+    isEnabled: Boolean,
+    onSetTaskListSections: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    SettingSwitch(
+        start = {
+            Icon(
+                imageVector = Icons.Outlined.ViewList,
+                contentDescription = null,
+                modifier = Modifier.align(Alignment.Top),
+            )
+        },
+        title = {
+            Column {
+                Text(
+                    text = stringResource(R.string.settings_tasks_sections_title),
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = stringResource(R.string.settings_tasks_sections_description),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
+        },
+        isSelected = isEnabled,
+        onSelect = onSetTaskListSections,
+        modifier = modifier,
+    )
+}
+
 @Preview
 @Composable
 fun TasksSettingsSectionPreview() {
@@ -132,6 +175,8 @@ fun TasksSettingsSectionPreview() {
         TasksSettingsSection(
             dailyReminder = DailyReminder(true, LocalTime.of(8, 0)),
             isMoveUndoneTasksTomorrowEnabled = true,
+            isTaskListSectionsEnabled = true,
+            onSetTaskListSections = {},
             onSetMoveUndoneTasksTomorrow = {},
             onClickDailyReminder = {},
             onEnableDailyReminder = {},

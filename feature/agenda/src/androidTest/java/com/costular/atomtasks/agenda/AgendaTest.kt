@@ -77,7 +77,7 @@ class AgendaTest : AndroidTest() {
         )
 
         agenda {
-            taskHasText(0, task.name)
+            taskHasText(task.name)
         }
     }
 
@@ -187,9 +187,6 @@ class AgendaTest : AndroidTest() {
                 onClickOpenCalendarView = {},
                 onDismissCalendarView = {},
                 onMarkTask = { _, _ -> },
-                deleteTask = {},
-                deleteRecurringTask = { _, _ -> },
-                dismissDelete = {},
                 openTaskDetail = {},
                 openTaskAction = {},
                 onDeleteTask = {},

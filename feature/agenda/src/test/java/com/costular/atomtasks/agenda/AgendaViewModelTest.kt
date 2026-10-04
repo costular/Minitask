@@ -1,30 +1,25 @@
 package com.costular.atomtasks.agenda
 
+import androidx.lifecycle.viewModelScope
 import app.cash.turbine.test
 import com.costular.atomtasks.agenda.analytics.AgendaAnalytics
 import com.costular.atomtasks.agenda.ui.AgendaViewModel
 import com.costular.atomtasks.agenda.ui.TasksState
 import com.costular.atomtasks.analytics.AtomAnalytics
-import com.costular.atomtasks.core.Either
 import com.costular.atomtasks.core.testing.MviViewModelTest
+import com.costular.atomtasks.core.ui.tasks.TaskInteractionState
+import com.costular.atomtasks.core.ui.tasks.TaskInteractionStateHolder
 import com.costular.atomtasks.core.toResult
-import com.costular.atomtasks.core.ui.AppSnackbarMessage
-import com.costular.atomtasks.core.ui.R
-import com.costular.atomtasks.core.ui.SnackbarManager
 import com.costular.atomtasks.core.ui.tasks.ItemPosition
 import com.costular.atomtasks.core.usecase.invoke
+import com.costular.atomtasks.data.settings.SettingsRepository
 import com.costular.atomtasks.data.tutorial.ShouldShowOnboardingUseCase
 import com.costular.atomtasks.data.tutorial.ShouldShowTaskOrderTutorialUseCase
 import com.costular.atomtasks.data.tutorial.TaskOrderTutorialDismissedUseCase
-import com.costular.atomtasks.review.usecase.ShouldAskReviewUseCase
-import com.costular.atomtasks.tasks.helper.AutoforwardManager
-import com.costular.atomtasks.tasks.helper.recurrence.RecurrenceScheduler
+import com.costular.atomtasks.tasks.removal.RecurringRemovalStrategy
 import com.costular.atomtasks.tasks.model.Task
-import com.costular.atomtasks.tasks.removal.RemoveTaskConfirmationUiState
 import com.costular.atomtasks.tasks.usecase.MoveTaskUseCase
 import com.costular.atomtasks.tasks.usecase.ObserveTasksUseCase
-import com.costular.atomtasks.tasks.removal.RemoveTaskUseCase
-import com.costular.atomtasks.tasks.usecase.UpdateTaskIsDoneUseCase
 import com.google.common.truth.Truth.assertThat
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -34,6 +29,7 @@ import io.mockk.verify
 import java.time.LocalDate
 import kotlin.time.ExperimentalTime
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -44,25 +40,48 @@ class AgendaViewModelTest : MviViewModelTest() {
 
     lateinit var sut: AgendaViewModel
 
+    private val interactionState = MutableStateFlow(TaskInteractionState())
+    private val interactions = mockk<TaskInteractionStateHolder>(relaxed = true) {
+        every { state } returns interactionState
+    }
+    private val interactionFactory = mockk<TaskInteractionStateHolder.Factory> {
+        every { create(any()) } returns interactions
+    }
+
     private val observeTasksUseCase: ObserveTasksUseCase = mockk()
-    private val updateTaskIsDoneUseCase: UpdateTaskIsDoneUseCase = mockk(relaxUnitFun = true)
-    private val removeTaskUseCase: RemoveTaskUseCase = mockk(relaxUnitFun = true)
-    private val autoforwardManager: AutoforwardManager = mockk(relaxUnitFun = true)
-    private val recurrenceScheduler: RecurrenceScheduler = mockk(relaxUnitFun = true)
     private val moveTaskUseCase: MoveTaskUseCase = mockk(relaxUnitFun = true)
     private val atomAnalytics: AtomAnalytics = mockk(relaxUnitFun = true)
     private val shouldShowTaskOrderTutorialUseCase: ShouldShowTaskOrderTutorialUseCase =
         mockk(relaxUnitFun = true)
     private val taskOrderTutorialDismissedUseCase: TaskOrderTutorialDismissedUseCase =
         mockk(relaxUnitFun = true)
-    private val shouldAskReviewUseCase: ShouldAskReviewUseCase = mockk(relaxUnitFun = true)
     private val shouldShowOnboardingUseCase: ShouldShowOnboardingUseCase = mockk()
-    private val snackbarManager: SnackbarManager = mockk(relaxUnitFun = true)
+    private val settingsRepository: SettingsRepository = mockk()
+    private val taskListSectionsEnabled = MutableStateFlow(false)
 
     @Before
     fun setUp() {
         givenOnboarding(false)
         initializeViewModel()
+    }
+
+    @Test
+    fun `should react to task list section flag changes from settings`() = runTest {
+        assertThat(sut.state.value.taskListSectionsEnabled).isFalse()
+
+        taskListSectionsEnabled.value = true
+        assertThat(sut.state.value.taskListSectionsEnabled).isTrue()
+
+        taskListSectionsEnabled.value = false
+        assertThat(sut.state.value.taskListSectionsEnabled).isFalse()
+    }
+
+    @Test
+    fun `should load an enabled task list flag from settings`() = runTest {
+        taskListSectionsEnabled.value = true
+        initializeViewModel()
+
+        assertThat(sut.state.value.taskListSectionsEnabled).isTrue()
     }
 
     @Test
@@ -98,93 +117,6 @@ class AgendaViewModelTest : MviViewModelTest() {
     }
 
     @Test
-    fun `should load task accordingly when mark task as done`() = runTest {
-        val expected = DEFAULT_TASKS
-        coEvery { observeTasksUseCase.invoke(any()) } returns flowOf(expected.toResult())
-
-        sut.loadTasks()
-        sut.onMarkTask(expected.first().id, true)
-
-        coVerify {
-            updateTaskIsDoneUseCase(
-                UpdateTaskIsDoneUseCase.Params(
-                    taskId = expected.first().id,
-                    isDone = true,
-                ),
-            )
-        }
-    }
-
-    @Test
-    fun `should show delete task action when tap on delete`() =
-        runTest {
-            val tasks = DEFAULT_TASKS
-            val taskId = DEFAULT_TASKS.first().id
-            coEvery { observeTasksUseCase.invoke(any()) } returns flowOf(tasks.toResult())
-
-            sut.loadTasks()
-            sut.actionDelete(taskId)
-
-            val state = sut.state.value
-            assertThat(state.removeTaskConfirmationUiState)
-                .isInstanceOf(RemoveTaskConfirmationUiState.Shown::class.java)
-        }
-
-    @Test
-    fun `should set delete task action to hidden when dismiss dialog`() =
-        runTest {
-            val tasks = DEFAULT_TASKS
-            val taskId = DEFAULT_TASKS.first().id
-            coEvery { observeTasksUseCase.invoke(any()) } returns flowOf(tasks.toResult())
-
-            sut.loadTasks()
-            sut.setStateWithRecurringTask(taskId)
-            sut.actionDelete(taskId)
-            sut.dismissDelete()
-
-            sut.state.test {
-                assertThat(expectMostRecentItem().removeTaskConfirmationUiState).isInstanceOf(
-                    RemoveTaskConfirmationUiState.Hidden::class.java
-                )
-                cancelAndIgnoreRemainingEvents()
-            }
-        }
-
-    @Test
-    fun `should load empty tasks when remove given there is only one existing task`() =
-        runTest {
-            val taskId = DEFAULT_TASKS.first().id
-            sut.deleteTask(taskId)
-
-            coVerify { removeTaskUseCase(RemoveTaskUseCase.Params(taskId)) }
-        }
-
-    @Test
-    fun `should show completed snackbar when mark task as done`() = runTest {
-        sut.onMarkTask(DEFAULT_TASKS.first().id, true)
-
-        verify {
-            snackbarManager.showMessage(
-                AppSnackbarMessage(messageRes = R.string.task_feedback_completed)
-            )
-        }
-    }
-
-    @Test
-    fun `should show deleted snackbar when delete succeeds`() = runTest {
-        val taskId = DEFAULT_TASKS.first().id
-
-        sut.deleteTask(taskId)
-
-        coVerify { removeTaskUseCase(RemoveTaskUseCase.Params(taskId)) }
-        verify {
-            snackbarManager.showMessage(
-                AppSnackbarMessage(messageRes = R.string.task_feedback_deleted)
-            )
-        }
-    }
-
-    @Test
     fun `should collapse header when select a day`() = runTest {
         sut.toggleHeader()
         sut.setSelectedDay(LocalDate.now().plusDays(1))
@@ -210,6 +142,31 @@ class AgendaViewModelTest : MviViewModelTest() {
         assertThat(tasks.first().id).isEqualTo(TASK2ID)
         assertThat(tasks.last().id).isEqualTo(TASK1_ID)
         coVerify(exactly = 0) { moveTaskUseCase(any()) }
+    }
+
+    @Test
+    fun `should move dragged task to target index without changing completion status`() = runTest {
+        val third = DEFAULT_TASKS.first().copy(id = 3L, position = 3)
+        val expected = DEFAULT_TASKS + third
+        coEvery { observeTasksUseCase.invoke(any()) } returns flowOf(expected.toResult())
+        sut.loadTasks()
+
+        sut.onDragTask(ItemPosition(0, TASK1_ID), ItemPosition(2, third.id))
+
+        val forward = (sut.state.value.tasks as TasksState.Success).data
+        assertThat(forward.map { it.id }).containsExactly(TASK2ID, third.id, TASK1_ID).inOrder()
+        assertThat(forward.associate { it.id to it.isDone })
+            .isEqualTo(expected.associate { it.id to it.isDone })
+
+        sut.onDragTask(ItemPosition(2, TASK1_ID), ItemPosition(0, TASK2ID))
+
+        assertThat((sut.state.value.tasks as TasksState.Success).data).containsExactlyElementsIn(expected).inOrder()
+        sut.onDragStopped()
+        coVerify {
+            moveTaskUseCase(
+                MoveTaskUseCase.Params(LocalDate.now(), expected.first().position, expected.first().position),
+            )
+        }
     }
 
     @Test
@@ -253,13 +210,6 @@ class AgendaViewModelTest : MviViewModelTest() {
     }
 
     @Test
-    fun `should call autoforward usecase when land on the screen`() = runTest {
-        coVerify(exactly = 1) {
-            autoforwardManager.scheduleOrCancelAutoforwardTasks()
-        }
-    }
-
-    @Test
     fun `should track event when expand header`() = runTest {
         sut.toggleHeader()
 
@@ -292,63 +242,6 @@ class AgendaViewModelTest : MviViewModelTest() {
     }
 
     @Test
-    fun `should track event when mark task as done`() = runTest {
-        val expected = DEFAULT_TASKS
-        coEvery { observeTasksUseCase.invoke(any()) } returns flowOf(expected.toResult())
-
-        sut.loadTasks()
-        sut.onMarkTask(expected.first().id, true)
-
-        verify {
-            atomAnalytics.track(AgendaAnalytics.MarkTaskAsDone)
-        }
-    }
-
-    @Test
-    fun `should track event when mark task as not done`() = runTest {
-        val expected = DEFAULT_TASKS
-
-        every {
-            observeTasksUseCase.invoke(any())
-        } returns flowOf(expected.toResult())
-
-        givenOrderTasksTutorial(true)
-
-        initializeViewModel()
-        sut.loadTasks()
-        sut.onMarkTask(expected.last().id, false)
-
-        verify {
-            atomAnalytics.track(AgendaAnalytics.MarkTaskAsNotDone)
-        }
-    }
-
-    @Test
-    fun `should track show confirm delete when tap on delete`() = runTest {
-        val tasks = DEFAULT_TASKS
-        val taskId = DEFAULT_TASKS.first().id
-        coEvery { observeTasksUseCase.invoke(any()) } returns flowOf(tasks.toResult())
-
-        sut.setStateWithRecurringTask(taskId)
-        sut.loadTasks()
-        sut.actionDelete(taskId)
-
-        verify {
-            atomAnalytics.track(AgendaAnalytics.ShowConfirmDeleteDialog)
-        }
-    }
-
-    @Test
-    fun `should track confirm delete when confirm dialog`() = runTest {
-        val taskId = DEFAULT_TASKS.first().id
-        sut.deleteTask(taskId)
-
-        verify(exactly = 1) {
-            atomAnalytics.track(AgendaAnalytics.ConfirmDelete)
-        }
-    }
-
-    @Test
     fun `should track navigate to day when select a new day`() = runTest {
         every { observeTasksUseCase.invoke(any()) } returns flowOf(emptyList<Task>().toResult())
         val day = LocalDate.of(2023, 9, 16)
@@ -357,22 +250,6 @@ class AgendaViewModelTest : MviViewModelTest() {
 
         verify(exactly = 1) {
             atomAnalytics.track(AgendaAnalytics.NavigateToDay(day.toString()))
-        }
-    }
-
-    @Test
-    fun `should track cancel delete when dismiss confirm delete dialog`() = runTest {
-        val tasks = DEFAULT_TASKS
-        val taskId = DEFAULT_TASKS.first().id
-        coEvery { observeTasksUseCase.invoke(any()) } returns flowOf(tasks.toResult())
-
-        sut.setStateWithRecurringTask(taskId)
-        sut.loadTasks()
-        sut.actionDelete(taskId)
-        sut.dismissDelete()
-
-        verify(exactly = 1) {
-            atomAnalytics.track(AgendaAnalytics.CancelDelete)
         }
     }
 
@@ -393,57 +270,6 @@ class AgendaViewModelTest : MviViewModelTest() {
         coVerify(exactly = 1) {
             taskOrderTutorialDismissedUseCase.invoke(Unit)
         }
-    }
-
-    @Test
-    fun `should expose ask review when mark task as done given usecase returns true`() = runTest {
-        coEvery { shouldAskReviewUseCase() } returns Either.Result(true)
-        coEvery { updateTaskIsDoneUseCase.invoke(any()) } returns Unit.toResult()
-        givenSuccessTasks()
-
-        sut.onMarkTask(DEFAULT_TASKS.first().id, true)
-
-        assertThat(sut.state.value.shouldShowReviewDialog).isTrue()
-    }
-
-    @Test
-    fun `should not expose ask review when mark task as NOT done given usecase returns true`() =
-        runTest {
-            coEvery { shouldAskReviewUseCase() } returns Either.Result(true)
-            givenSuccessTasks()
-
-            sut.onMarkTask(DEFAULT_TASKS.first().id, false)
-
-            assertThat(sut.state.value.shouldShowReviewDialog).isFalse()
-        }
-
-    @Test
-    fun `should not expose ask review when finish review given the review was being shown`() =
-        runTest {
-            coEvery { shouldAskReviewUseCase() } returns Either.Result(true)
-            givenSuccessTasks()
-
-            sut.onMarkTask(DEFAULT_TASKS.first().id, true)
-            sut.onReviewFinished()
-
-            assertThat(sut.state.value.shouldShowReviewDialog).isFalse()
-        }
-
-    private fun givenSuccessTasks() {
-        coEvery { observeTasksUseCase.invoke(any()) } returns flowOf(DEFAULT_TASKS.toResult())
-    }
-
-    private fun AgendaViewModel.setStateWithRecurringTask(taskId: Long) {
-        coEvery { observeTasksUseCase.invoke(any()) } returns flowOf(
-            DEFAULT_TASKS.map { task ->
-                if (task.id == taskId) {
-                    task.copy(isRecurring = true)
-                } else {
-                    task
-                }
-            }.toResult()
-        )
-        loadTasks()
     }
 
     private fun givenOrderTasksTutorial(isEnabled: Boolean) {
@@ -491,24 +317,37 @@ class AgendaViewModelTest : MviViewModelTest() {
 
     private fun initializeViewModel() {
         coEvery { observeTasksUseCase.invoke(any()) } returns flowOf(emptyList<Task>().toResult())
-        coEvery { updateTaskIsDoneUseCase.invoke(any()) } returns Unit.toResult()
-        coEvery { removeTaskUseCase.invoke(any()) } returns Unit.toResult()
-        coEvery { shouldAskReviewUseCase.invoke(Unit) } returns false.toResult()
         givenOrderTasksTutorial(true)
+        every { settingsRepository.observeTaskListSectionsEnabled() } returns taskListSectionsEnabled
 
         sut = AgendaViewModel(
             observeTasksUseCase = observeTasksUseCase,
-            updateTaskIsDoneUseCase = updateTaskIsDoneUseCase,
-            removeTaskUseCase = removeTaskUseCase,
-            autoforwardManager = autoforwardManager,
             moveTaskUseCase = moveTaskUseCase,
             atomAnalytics = atomAnalytics,
             shouldShowTaskOrderTutorialUseCase = shouldShowTaskOrderTutorialUseCase,
             taskOrderTutorialDismissedUseCase = taskOrderTutorialDismissedUseCase,
-            shouldShowAskReviewUseCase = shouldAskReviewUseCase,
-            recurrenceScheduler = recurrenceScheduler,
             shouldShowOnboardingUseCase = shouldShowOnboardingUseCase,
-            snackbarManager = snackbarManager,
+            settingsRepository = settingsRepository,
+            taskInteractionFactory = interactionFactory,
         )
     }
+    @Test
+    fun `task interactions use the screen scope expose holder state and delegate actions`() = runTest {
+        val viewModel = sut
+        verify { interactionFactory.create(viewModel.viewModelScope) }
+        assertThat(viewModel.taskInteractionState).isSameInstanceAs(interactionState)
+        viewModel.onMarkTask(1, true)
+        viewModel.askDelete(2)
+        viewModel.dismissDelete()
+        viewModel.deleteTask(3)
+        viewModel.deleteRecurringTask(4, RecurringRemovalStrategy.ALL)
+        viewModel.onReviewFinished()
+        verify { interactions.onMarkTask(1, true) }
+        verify { interactions.askDelete(2) }
+        verify { interactions.dismissDelete() }
+        verify { interactions.deleteTask(3) }
+        verify { interactions.deleteRecurringTask(4, RecurringRemovalStrategy.ALL) }
+        verify { interactions.onReviewFinished() }
+    }
+
 }

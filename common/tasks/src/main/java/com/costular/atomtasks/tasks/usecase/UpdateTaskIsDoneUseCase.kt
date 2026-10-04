@@ -6,6 +6,7 @@ import com.costular.atomtasks.core.usecase.UseCase
 import com.costular.atomtasks.tasks.helper.recurrence.RecurrenceScheduler
 import com.costular.atomtasks.tasks.model.UpdateTaskIsDoneError
 import com.costular.atomtasks.tasks.repository.TasksRepository
+import kotlinx.coroutines.CancellationException
 import javax.inject.Inject
 
 class UpdateTaskIsDoneUseCase @Inject constructor(
@@ -26,6 +27,8 @@ class UpdateTaskIsDoneUseCase @Inject constructor(
                 recurrenceScheduler.scheduleTaskRecurrence(params.taskId)
             }
             Either.Result(Unit)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             atomLog { e }
             Either.Error(UpdateTaskIsDoneError.UnknownError)
