@@ -1,6 +1,9 @@
 package com.costular.atomtasks.search
 
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -8,9 +11,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.assertTopPositionInRootIsEqualTo
 import androidx.compose.ui.test.hasProgressBarRangeInfo
 import androidx.compose.ui.test.hasScrollToIndexAction
 import androidx.compose.ui.test.hasSetTextAction
@@ -42,7 +47,35 @@ class SearchScreenTest : AndroidTest() {
     private val task = TaskToday.copy(id = 47, name = "Gym session", isDone = false)
     private val today = LocalDate.now()
 
+    @Test
+    fun givenScaffoldInsetWhenSearchRendersThenInputStartsBelowInset() {
+        composeTestRule.setContent {
+            AtomTheme {
+                Scaffold(contentWindowInsets = WindowInsets(top = 48.dp)) { padding ->
+                    SearchScreen(
+                        state = SearchState(),
+                        onQueryChange = {},
+                        onBack = {},
+                        onRetry = {},
+                        onOpenTask = {},
+                        onMore = {},
+                        onMark = { _, _ -> },
+                        onDelete = {},
+                        modifier = Modifier.fillMaxSize().padding(padding),
+                    )
+                }
+            }
+        }
 
+        composeTestRule.onNode(hasSetTextAction()).assertTopPositionInRootIsEqualTo(56.dp)
+    }
+
+    @Test
+    fun givenBlankIdleQueryWhenRenderedThenOnlyInputHasText() {
+        showScreen(SearchState(""))
+
+        composeTestRule.onAllNodes(hasText("", substring = true)).assertCountEquals(1)
+    }
 
     @Test
     fun givenBlankIdleQueryWhenRenderedThenNoResultsMessageIsHidden() {
@@ -51,6 +84,12 @@ class SearchScreenTest : AndroidTest() {
         composeTestRule.onNodeWithText(composeTestRule.getString(R.string.search_no_results)).assertDoesNotExist()
     }
 
+    @Test
+    fun givenShortIdleQueryWhenRenderedThenOnlyInputHasText() {
+        showScreen(SearchState("g"))
+
+        composeTestRule.onAllNodes(hasText("", substring = true)).assertCountEquals(1)
+    }
 
     @Test
     fun givenShortIdleQueryWhenRenderedThenNoResultsMessageIsHidden() {

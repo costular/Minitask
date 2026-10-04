@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 ### Fixed
+- Remove duplicate top spacing and the minimum-character prompt from task search.
 
 ### Security
 

@@ -143,7 +143,6 @@
     <string name="settings_backup_loading">Procesando…</string>
     <string name="settings_backup_import_confirm_title">Restaurar copia de seguridad?</string>
     <string name="settings_backup_import_confirm_message">¡Importante! La restauración eliminará las tareas actuales y las reemplazará por la copia de seguridad. Esta acción no se puede deshacer.</string>
-    <string name="search_minimum_characters">Escribe al menos 2 caracteres para buscar</string>
     <string name="search_tasks">Buscar tareas</string>
     <string name="search_clear">Borrar búsqueda</string>
     <string name="search_no_results">No hay tareas que coincidan</string>

@@ -4,6 +4,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
@@ -111,6 +112,8 @@ fun SearchScreen(
                 .padding(horizontal = AppTheme.dimens.contentMargin),
             expanded = false,
             onExpandedChange = {},
+            // The app scaffold already provides the system-bar padding.
+            windowInsets = WindowInsets(0, 0, 0, 0),
             inputField = {
                 SearchBarDefaults.InputField(
                     modifier = Modifier.focusRequester(focusRequester),
@@ -153,7 +156,7 @@ fun SearchScreen(
                     listState = listState,
                 )
             }
-            SearchResults.Idle -> SearchMessage(R.string.search_minimum_characters, Modifier.weight(1f))
+            SearchResults.Idle -> Unit
             SearchResults.Loading -> Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                 CircularLoadingIndicator()
             }
