@@ -170,7 +170,7 @@
     <string name="search_no_results">No matching tasks</string>
     <string name="tasks_load_error">Could not load tasks</string>
     <string name="tasks_retry">Retry</string>
-    <string name="vertical_tasks">Vertical Tasks</string>
+    <string name="vertical_tasks">Vertical</string>
     <string name="vertical_empty_day">No tasks</string>
     <string name="task_more_actions">Task actions</string>
     <string name="navigate_back">Back</string>
