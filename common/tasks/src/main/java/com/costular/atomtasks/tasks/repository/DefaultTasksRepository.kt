@@ -1,5 +1,6 @@
 package com.costular.atomtasks.tasks.repository
 
+import com.costular.atomtasks.core.net.DispatcherProvider
 import com.costular.atomtasks.data.tasks.TaskEntity
 import com.costular.atomtasks.tasks.model.RecurrenceType
 import com.costular.atomtasks.tasks.model.Task
@@ -9,12 +10,20 @@ import com.costular.atomtasks.tasks.removal.RecurringRemovalStrategy
 import java.time.LocalDate
 import java.time.LocalTime
 import javax.inject.Inject
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.withContext
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @Suppress("TooManyFunctions")
 internal class DefaultTasksRepository @Inject constructor(
     private val localDataSource: TaskLocalDataSource,
+    private val dispatchers: DispatcherProvider,
 ) : TasksRepository {
 
     override suspend fun createTask(
@@ -53,13 +62,26 @@ internal class DefaultTasksRepository @Inject constructor(
         return localDataSource.getTasksCount()
     }
 
+    override fun observeSearchTasks(query: String): Flow<List<Task>> =
+        localDataSource.observeSearchTasks(query).mapLatest { tasks ->
+            withContext(dispatchers.computation) {
+                tasks.map {
+                    currentCoroutineContext().ensureActive()
+                    it.toDomain()
+                }
+            }
+        }
+
     override fun getTaskById(id: Long): Flow<Task?> {
         return localDataSource.getTaskById(id)
             .map { it?.toDomain() }
+            .flowOn(dispatchers.computation)
     }
 
     override fun getTasks(day: LocalDate?): Flow<List<Task>> {
-        return localDataSource.getTasks(day).map { tasks -> tasks.map { it.toDomain() } }
+        return localDataSource.getTasks(day)
+            .map { tasks -> tasks.map { it.toDomain() } }
+            .flowOn(dispatchers.computation)
     }
 
     override suspend fun removeTask(

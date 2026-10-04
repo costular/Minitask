@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -50,6 +51,7 @@ internal fun AgendaHeader(
     onSelectDate: (LocalDate) -> Unit,
     onSelectToday: () -> Unit,
     onClickCalendar: () -> Unit,
+    onSearch: () -> Unit = {},
 ) {
     val coroutineScope = rememberCoroutineScope()
     val startDate = remember(selectedDay) { selectedDay.date.minusDays(DaysToShow) }
@@ -61,8 +63,8 @@ internal fun AgendaHeader(
         firstVisibleWeekDate = selectedDay.date,
     )
 
-    Surface {
-        Column(modifier) {
+    Surface(modifier = modifier) {
+        Column {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -94,6 +96,10 @@ internal fun AgendaHeader(
                                 .copy(color = MaterialTheme.colorScheme.onSurface)
                         )
                     }
+                }
+
+                IconButton(onClick = onSearch) {
+                    Icon(Icons.Outlined.Search, stringResource(R.string.search_tasks))
                 }
 
                 IconButton(

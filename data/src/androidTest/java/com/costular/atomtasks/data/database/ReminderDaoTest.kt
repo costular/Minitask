@@ -68,7 +68,7 @@ class ReminderDaoTest {
         )
         reminderDao.insertReminder(reminder)
 
-        val result = tasksDao.getTaskById(taskId).first()
+        val result = requireNotNull(tasksDao.getTaskById(taskId).first())
         Truth.assertThat(reminderDao.reminderExistForTask(taskId)).isTrue()
         Truth.assertThat(result.reminder!!.time).isEqualTo(time)
         Truth.assertThat(result.reminder!!.date).isEqualTo(date)
@@ -99,7 +99,7 @@ class ReminderDaoTest {
         reminderDao.insertReminder(reminder)
         reminderDao.updateReminder(taskId, date, time)
 
-        val result = tasksDao.getTaskById(taskId).first()
+        val result = requireNotNull(tasksDao.getTaskById(taskId).first())
         Truth.assertThat(result.reminder!!.time).isEqualTo(time)
         Truth.assertThat(result.reminder!!.date).isEqualTo(date)
     }

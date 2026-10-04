@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Group completed tasks in a collapsible section.
+- Search all task names with live results and task actions.
 
 ### Changed
 

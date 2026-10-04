@@ -5,18 +5,29 @@ import com.costular.atomtasks.data.tasks.ReminderDao
 import com.costular.atomtasks.data.tasks.TaskAggregated
 import com.costular.atomtasks.data.tasks.TaskEntity
 import com.costular.atomtasks.data.tasks.TasksDao
+import com.costular.atomtasks.data.tasks.taskNameSearchPattern
 import com.costular.atomtasks.tasks.model.RecurrenceType
 import com.costular.atomtasks.tasks.model.asString
+import com.costular.atomtasks.core.testing.net.TestDispatcherProvider
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import com.google.common.truth.Truth.assertThat
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import io.mockk.every
+import io.mockk.verify
 import java.time.LocalDate
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class DefaultTasksLocalDataSourceTest {
 
     lateinit var sut: TaskLocalDataSource
@@ -31,6 +42,7 @@ class DefaultTasksLocalDataSourceTest {
             tasksDao = tasksDao,
             reminderDao = reminderDao,
             transactionRunner = transactionRunner,
+            dispatchers = TestDispatcherProvider(UnconfinedTestDispatcher()),
         )
     }
 
@@ -94,5 +106,22 @@ class DefaultTasksLocalDataSourceTest {
         val result = sut.numberFutureOccurrences(10L, LocalDate.now())
 
         assertThat(result).isEqualTo(expectedCount)
+    }
+
+    @Test
+    fun `search encodes a literal query on the data dispatcher and never loads all tasks`() = runTest {
+        val computation = StandardTestDispatcher(testScheduler, name = "data computation")
+        val source = DefaultTasksLocalDataSource(tasksDao, reminderDao, transactionRunner,
+            TestDispatcherProvider(computation))
+        val query = "%_École*?[]"
+        every { tasksDao.observeSearchTasks(taskNameSearchPattern(query)) } answers {
+            kotlinx.coroutines.flow.flow {
+                assertThat(currentCoroutineContext()[CoroutineDispatcher]).isSameInstanceAs(computation)
+                emit(emptyList())
+            }
+        }
+        assertThat(source.observeSearchTasks(query).first()).isEmpty()
+        verify(exactly = 1) { tasksDao.observeSearchTasks(taskNameSearchPattern(query)) }
+        verify(exactly = 0) { tasksDao.getAllTasks() }
     }
 }

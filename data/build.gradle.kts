@@ -13,6 +13,8 @@ android {
     defaultConfig {
         testInstrumentationRunner = "com.costular.atomtasks.core.testing.AtomTestRunner"
     }
+
+    sourceSets.getByName("androidTest").assets.srcDir("schemas")
 }
 
 dependencies {

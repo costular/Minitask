@@ -15,5 +15,7 @@ interface AgendaNavigator {
         isDone: Boolean,
     )
 
+    fun navigateToSearch()
+
     fun navigateToOnboarding()
 }

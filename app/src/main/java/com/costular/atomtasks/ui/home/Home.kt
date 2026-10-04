@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import com.costular.atomtasks.core.ui.AppSnackbarHostEffect
 import com.costular.atomtasks.core.ui.rememberAppSnackbarState
@@ -29,6 +30,8 @@ import com.costular.designsystem.theme.AtomTheme
 import com.ramcosta.composedestinations.generated.agenda.destinations.AgendaScreenDestination
 import com.ramcosta.composedestinations.rememberNavHostEngine
 import com.costular.atomtasks.core.ui.R.string as S
+
+internal const val CreateTaskFabTag = "CreateTaskFab"
 
 @Composable
 fun App(
@@ -49,7 +52,7 @@ fun App(
 @Suppress("LongMethod")
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-private fun Home(
+internal fun Home(
     atomAppState: AtomAppState,
 ) {
     val (fabOnClick, setFabOnClick) = remember { mutableStateOf<(() -> Unit)?>(null) }
@@ -126,6 +129,7 @@ private fun AddTaskFloatingActionButton(
     ) {
         if (shouldBeExpanded) {
             ExtendedFloatingActionButton(
+                modifier = Modifier.testTag(CreateTaskFabTag),
                 onClick = {
                     fabOnclick?.invoke()
                 },
@@ -137,7 +141,7 @@ private fun AddTaskFloatingActionButton(
                 }
             )
         } else {
-            FloatingActionButton(onClick = {
+            FloatingActionButton(modifier = Modifier.testTag(CreateTaskFabTag), onClick = {
                 fabOnclick?.invoke()
             }) {
                 Icon(Icons.Outlined.Add, contentDescription = null)

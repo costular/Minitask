@@ -8,19 +8,27 @@ import com.costular.atomtasks.tasks.model.Task
 import com.costular.atomtasks.tasks.repository.DefaultTasksRepository
 import com.costular.atomtasks.tasks.repository.TaskLocalDataSource
 import com.costular.atomtasks.tasks.repository.TasksRepository
+import com.costular.atomtasks.core.testing.net.TestDispatcherProvider
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import com.google.common.truth.Truth.assertThat
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.slot
+import io.mockk.every
+import io.mockk.verify
 import java.time.LocalDate
 import java.time.LocalTime
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class DefaultTasksRepositoryTest {
 
     private lateinit var sut: TasksRepository
@@ -29,7 +37,7 @@ class DefaultTasksRepositoryTest {
 
     @Before
     fun setUp() {
-        sut = DefaultTasksRepository(localDataSource)
+        sut = DefaultTasksRepository(localDataSource, TestDispatcherProvider(UnconfinedTestDispatcher()))
     }
 
     @Test
@@ -184,5 +192,32 @@ class DefaultTasksRepositoryTest {
         val result = sut.numberFutureOccurrences(parentId, day)
 
         assertThat(result).isEqualTo(expectedCount)
+    }
+
+    @Test
+    fun `search delegates to filtered data source and preserves its ordering`() = runTest {
+        val day = LocalDate.of(2026, 10, 3)
+        val matches = listOf(
+            TaskAggregated(TaskEntity(2, day, "Gym", day.plusDays(1)), null),
+            TaskAggregated(TaskEntity(1, day, "GYM", day, isDone = true), null),
+        )
+        every { localDataSource.observeSearchTasks("gym") } returns flowOf(matches)
+        val result = sut.observeSearchTasks("gym").first()
+        assertThat(result.map { it.id }).containsExactly(2L, 1L).inOrder()
+        assertThat(result.last().isDone).isTrue()
+        verify(exactly = 1) { localDataSource.observeSearchTasks("gym") }
+        verify(exactly = 0) { localDataSource.getTasks(any()) }
+    }
+
+    @Test
+    fun `newer snapshot cancels mapping queued on the repository computation dispatcher`() = runTest {
+        val day = LocalDate.of(2026, 10, 3)
+        every { localDataSource.observeSearchTasks("gym") } returns flow {
+            emit(listOf(TaskAggregated(TaskEntity(1, day, "Old gym", day), null)))
+            emit(listOf(TaskAggregated(TaskEntity(2, day, "Latest gym", day), null)))
+        }
+        val computation = StandardTestDispatcher(testScheduler, name = "data computation")
+        val repository = DefaultTasksRepository(localDataSource, TestDispatcherProvider(computation))
+        assertThat(repository.observeSearchTasks("gym").first().map { it.id }).containsExactly(2L)
     }
 }

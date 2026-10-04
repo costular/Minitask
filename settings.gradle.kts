@@ -40,3 +40,5 @@ include(":core:ui:tasks")
 include(":feature:detail")
 include(":feature:onboarding")
 include(":core:locale")
+
+include(":feature:search")

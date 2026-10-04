@@ -1,23 +1,29 @@
 package com.costular.atomtasks.tasks.repository
 
+import com.costular.atomtasks.core.net.DispatcherProvider
 import com.costular.atomtasks.data.database.TransactionRunner
 import com.costular.atomtasks.data.tasks.ReminderDao
 import com.costular.atomtasks.data.tasks.ReminderEntity
 import com.costular.atomtasks.data.tasks.TaskAggregated
 import com.costular.atomtasks.data.tasks.TaskEntity
 import com.costular.atomtasks.data.tasks.TasksDao
+import com.costular.atomtasks.data.tasks.taskNameSearchPattern
 import com.costular.atomtasks.tasks.removal.RecurringRemovalStrategy
 import java.time.LocalDate
 import java.time.LocalTime
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 
 @Suppress("TooManyFunctions")
 internal class DefaultTasksLocalDataSource @Inject constructor(
     private val tasksDao: TasksDao,
     private val reminderDao: ReminderDao,
     private val transactionRunner: TransactionRunner,
+    private val dispatchers: DispatcherProvider,
 ) : TaskLocalDataSource {
 
     override suspend fun createTask(taskEntity: TaskEntity): Long {
@@ -50,6 +56,10 @@ internal class DefaultTasksLocalDataSource @Inject constructor(
             tasksDao.getAllTasks().distinctUntilChanged()
         }
     }
+
+    override fun observeSearchTasks(query: String): Flow<List<TaskAggregated>> = flow {
+        emitAll(tasksDao.observeSearchTasks(taskNameSearchPattern(query)))
+    }.distinctUntilChanged().flowOn(dispatchers.computation)
 
     override fun getTaskById(id: Long): Flow<TaskAggregated?> {
         return tasksDao.getTaskById(id).distinctUntilChanged()

@@ -105,6 +105,7 @@ internal fun AgendaScreen(
     AgendaScreen(
         state = state,
         onSelectDate = viewModel::setSelectedDay,
+        onSearch = navigator::navigateToSearch,
         onSelectToday = viewModel::setSelectedDayToday,
         onMarkTask = viewModel::onMarkTask,
         onClickOpenCalendarView = viewModel::openCalendarView,
@@ -144,6 +145,7 @@ fun AgendaScreen(
     onDragTask: (ItemPosition, ItemPosition) -> Unit,
     onDragStopped: () -> Unit,
     modifier: Modifier = Modifier,
+    onSearch: () -> Unit = {},
 ) {
     if (state.shouldShowCalendarView) {
         DatePickerDialog(
@@ -195,6 +197,7 @@ fun AgendaScreen(
             shouldShowTodayAction = state.selectedDay.date != LocalDate.now(),
             onSelectToday = onSelectToday,
             onClickCalendar = onClickOpenCalendarView,
+            onSearch = onSearch,
             modifier = Modifier.fillMaxWidth(),
         )
 

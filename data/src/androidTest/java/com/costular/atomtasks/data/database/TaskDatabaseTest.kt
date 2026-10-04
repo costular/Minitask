@@ -7,6 +7,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.cash.turbine.test
 import com.costular.atomtasks.data.tasks.TaskEntity
 import com.costular.atomtasks.data.tasks.TasksDao
+import com.costular.atomtasks.data.tasks.taskNameSearchPattern
 import com.google.common.truth.Truth.assertThat
 import java.io.IOException
 import java.time.LocalDate
@@ -40,6 +41,90 @@ class TaskDatabaseTest {
     @Throws(IOException::class)
     fun tearDown() {
         db.close()
+    }
+
+
+
+    @Test
+    fun searchFiltersInSqlAndOrdersAllDatesStatusesAndRecurringOccurrences() = runTest {
+        val day = LocalDate.of(2026, 10, 3)
+        val template = TaskEntity(0, day, "Gym", day)
+        tasksDao.addTask(template.copy(id = 1, position = 2, isDone = true))
+        tasksDao.addTask(template.copy(id = 2, name = "GYM occurrence", day = day.plusDays(1),
+            position = 1, isRecurring = true, recurrenceType = "daily", parentId = 1))
+        tasksDao.addTask(template.copy(id = 3, name = "gym clothes", position = 0))
+        tasksDao.addTask(template.copy(id = 4, name = "Gym membership", position = 1))
+        tasksDao.addTask(template.copy(id = 5, name = "Other", day = day.plusDays(2)))
+        tasksDao.addTask(template.copy(id = 6, name = "Past gym", day = day.minusDays(1)))
+        val matches = tasksDao.observeSearchTasks(taskNameSearchPattern("gYm")).first()
+        assertThat(matches.map { it.task.id }).containsExactly(2L, 3L, 4L, 1L, 6L).inOrder()
+        assertThat(matches.first().task.parentId).isEqualTo(1)
+        assertThat(matches.first().task.isRecurring).isTrue()
+        assertThat(matches.first { it.task.id == 1L }.task.isDone).isTrue()
+        assertThat(tasksDao.observeSearchTasks(taskNameSearchPattern("not found")).first()).isEmpty()
+    }
+
+    @Test
+    fun searchMatchesAccentedCaseWithoutFoldingAccentsOrTreatingPercentAsWildcard() = runTest {
+        val day = LocalDate.of(2026, 10, 3)
+        val template = TaskEntity(0, day, "100%_ÉCOLE", day)
+        val first = tasksDao.createTask(template)
+        val second = tasksDao.createTask(template.copy(name = "100 things école"))
+        val unaccented = tasksDao.createTask(template.copy(name = "100 things ecole"))
+        assertThat(tasksDao.observeSearchTasks(taskNameSearchPattern("%_")).first().map { it.task.id })
+            .containsExactly(first)
+        assertThat(tasksDao.observeSearchTasks(taskNameSearchPattern("école")).first().map { it.task.id })
+            .containsExactly(first, second)
+        assertThat(tasksDao.observeSearchTasks(taskNameSearchPattern("ecole")).first().map { it.task.id })
+            .containsExactly(unaccented)
+    }
+
+    @Test
+    fun searchTreatsGlobMetacharactersAndQuotesAsLiteralText() = runTest {
+        val day = LocalDate.of(2026, 10, 3)
+        val literalQueries = listOf("*?", "[a-z]", "]", "\\", "' OR 1=1 --", "^-")
+        val ids = literalQueries.map { query -> tasksDao.createTask(TaskEntity(0, day, "Task $query", day)) }
+        tasksDao.createTask(TaskEntity(0, day, "Task anything", day))
+        for (query in literalQueries) {
+            val matches = tasksDao.observeSearchTasks(taskNameSearchPattern(query)).first()
+            val expected = literalQueries.indices
+                .filter { literalQueries[it].contains(query, ignoreCase = true) }
+                .map { ids[it] }
+            assertThat(matches.map { it.task.id }).containsExactlyElementsIn(expected)
+        }
+    }
+
+    @Test
+    fun searchPreservesUnicodeCaseEquivalences() = runTest {
+        val day = LocalDate.of(2026, 10, 3)
+        val names = listOf("İstanbul", "ıSTANBUL", "Kelvin", "ſailing", "Σίσυφος", "ẞ test", "ß test")
+        val ids = names.map { tasksDao.createTask(TaskEntity(0, day, it, day)) }
+        for (query in listOf("istanbul", "kelvin", "sail", "σίσ", "ß test")) {
+            val expected = names.indices.filter { names[it].contains(query, ignoreCase = true) }.map { ids[it] }
+            assertThat(tasksDao.observeSearchTasks(taskNameSearchPattern(query)).first().map { it.task.id })
+                .containsExactlyElementsIn(expected)
+        }
+    }
+
+    @Test
+    fun searchObservationUpdatesOnInsertRenameCompletionAndDeletion() = runTest {
+        val day = LocalDate.of(2026, 10, 3)
+        val template = TaskEntity(0, day, "Gym", day)
+        tasksDao.observeSearchTasks(taskNameSearchPattern("gym")).test {
+            assertThat(awaitItem()).isEmpty()
+            val id = tasksDao.createTask(template)
+            assertThat(awaitItem().single().task.id).isEqualTo(id)
+            tasksDao.updateTaskDone(id, true)
+            val completed = awaitItem().single().task
+            assertThat(completed.isDone).isTrue()
+            tasksDao.update(completed.copy(name = "Other"))
+            assertThat(awaitItem()).isEmpty()
+            tasksDao.update(completed)
+            assertThat(awaitItem().single().task.name).isEqualTo("Gym")
+            tasksDao.removeTaskById(id)
+            assertThat(awaitItem()).isEmpty()
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
     @Test
@@ -373,7 +458,7 @@ class TaskDatabaseTest {
         )
 
         val id = tasksDao.createTask(task)
-        val taskAggregated = tasksDao.getTaskById(id).first()
+        val taskAggregated = requireNotNull(tasksDao.getTaskById(id).first())
 
         assertThat(taskAggregated.task.recurrenceType).isEqualTo("daily")
     }

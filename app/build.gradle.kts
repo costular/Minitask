@@ -80,6 +80,7 @@ dependencies {
     implementation(projects.core.logging)
     implementation(project(":data"))
     implementation(project(":feature:agenda"))
+    implementation(projects.feature.search)
     implementation(projects.core.ui.tasks)
     implementation(project(":feature:settings"))
     implementation(projects.common.tasks)
@@ -124,6 +125,13 @@ dependencies {
     testImplementation(libs.robolectric)
 
     androidTestImplementation(projects.core.testing)
+    androidTestImplementation(projects.core.preferences)
+    androidTestImplementation(libs.preferences.datastore)
+    androidTestImplementation(libs.compose.ui.test)
+    androidTestImplementation(libs.hilt.android.testing)
+    androidTestImplementation(libs.truth)
+    androidTestImplementation(libs.coroutines.test)
+    debugImplementation(libs.compose.ui.manifest)
 
     baselineProfile(projects.benchmarks)
 }

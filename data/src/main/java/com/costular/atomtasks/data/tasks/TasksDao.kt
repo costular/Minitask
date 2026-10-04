@@ -42,6 +42,16 @@ interface TasksDao {
     fun getAllTasksForDate(date: LocalDate): Flow<List<TaskAggregated>>
 
     @Transaction
+    @Query(
+        """
+            SELECT * FROM tasks
+            WHERE name GLOB :namePattern
+            ORDER BY date DESC, position ASC, id ASC
+        """
+    )
+    fun observeSearchTasks(namePattern: String): Flow<List<TaskAggregated>>
+
+    @Transaction
     @Query("SELECT * FROM tasks WHERE id = :id LIMIT 1")
     fun getTaskById(id: Long): Flow<TaskAggregated?>
 
