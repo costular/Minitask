@@ -62,6 +62,11 @@ internal class DefaultTasksRepository @Inject constructor(
         return localDataSource.getTasksCount()
     }
 
+    override fun observeTasksInRange(startDate: LocalDate, endDate: LocalDate): Flow<List<Task>> =
+        localDataSource.observeTasksInRange(startDate, endDate)
+            .map { tasks -> tasks.map { it.toDomain() } }
+            .flowOn(dispatchers.computation)
+
     override fun observeSearchTasks(query: String): Flow<List<Task>> =
         localDataSource.observeSearchTasks(query).mapLatest { tasks ->
             withContext(dispatchers.computation) {

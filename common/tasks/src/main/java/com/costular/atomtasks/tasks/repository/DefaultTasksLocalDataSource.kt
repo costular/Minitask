@@ -57,6 +57,9 @@ internal class DefaultTasksLocalDataSource @Inject constructor(
         }
     }
 
+    override fun observeTasksInRange(startDate: LocalDate, endDate: LocalDate): Flow<List<TaskAggregated>> =
+        tasksDao.observeTasksInRange(startDate, endDate).distinctUntilChanged()
+
     override fun observeSearchTasks(query: String): Flow<List<TaskAggregated>> = flow {
         emitAll(tasksDao.observeSearchTasks(taskNameSearchPattern(query)))
     }.distinctUntilChanged().flowOn(dispatchers.computation)

@@ -9,9 +9,11 @@ import androidx.compose.runtime.remember
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import com.ramcosta.composedestinations.generated.agenda.destinations.AgendaScreenDestination
+import com.ramcosta.composedestinations.generated.verticaltasks.destinations.VerticalTasksScreenDestination
 import com.ramcosta.composedestinations.generated.settings.destinations.SettingsScreenDestination
 import com.ramcosta.composedestinations.generated.settings.destinations.ThemeSelectorScreenDestination
 import com.ramcosta.composedestinations.spec.DestinationSpec
+import com.ramcosta.composedestinations.spec.NavGraphSpec
 import com.ramcosta.composedestinations.utils.currentDestinationAsState
 
 @Composable
@@ -35,6 +37,7 @@ class AtomAppState(
     val shouldShowNavigation: Boolean
         @Composable get() = currentDestination?.route in listOf(
             AgendaScreenDestination,
+            VerticalTasksScreenDestination,
             SettingsScreenDestination,
             ThemeSelectorScreenDestination,
         ).map { it.route }
@@ -49,7 +52,7 @@ class AtomAppState(
             }
         }
 
-    fun navigateToTopLevelDestination(selected: DestinationSpec) {
+    fun navigateToTopLevelDestination(selected: NavGraphSpec) {
         navController.navigate(selected.route) {
             launchSingleTop = true
             restoreState = true

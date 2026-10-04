@@ -16,7 +16,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -28,6 +28,7 @@ import com.costular.atomtasks.core.ui.SnackbarController
 import com.costular.atomtasks.ui.AppNavigation
 import com.costular.designsystem.theme.AtomTheme
 import com.ramcosta.composedestinations.generated.agenda.destinations.AgendaScreenDestination
+import com.ramcosta.composedestinations.generated.verticaltasks.destinations.VerticalTasksScreenDestination
 import com.ramcosta.composedestinations.rememberNavHostEngine
 import com.costular.atomtasks.core.ui.R.string as S
 
@@ -55,7 +56,10 @@ fun App(
 internal fun Home(
     atomAppState: AtomAppState,
 ) {
-    val (fabOnClick, setFabOnClick) = remember { mutableStateOf<(() -> Unit)?>(null) }
+    val fabActions = remember { mutableStateMapOf<String, () -> Unit>() }
+    val setFabOnClick = remember {
+        { route: String, action: () -> Unit -> fabActions[route] = action }
+    }
     val currentDestination = atomAppState.currentDestination
     val snackbarState = rememberAppSnackbarState()
 
@@ -72,7 +76,7 @@ internal fun Home(
                 item(
                     selected = isCurrentDestination,
                     onClick = {
-                        atomAppState.navigateToTopLevelDestination(destination.screen)
+                        atomAppState.navigateToTopLevelDestination(destination.graph)
                     },
                     icon = {
                         HomeNavigationItemIcon(
@@ -91,8 +95,9 @@ internal fun Home(
             snackbarHostState = snackbarState.hostState,
             floatingActionButton = {
                 AddTaskFloatingActionButton(
-                    shouldBeShown = currentDestination == AgendaScreenDestination,
-                    fabOnclick = fabOnClick,
+                    shouldBeShown = currentDestination == AgendaScreenDestination ||
+                        currentDestination == VerticalTasksScreenDestination,
+                    fabOnclick = fabActions[currentDestination?.route],
                     shouldBeExpanded = true,
                 )
             },

@@ -2,6 +2,7 @@ package com.costular.atomtasks.ui
 
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.costular.atomtasks.ui.home.AppNavigator
 import com.costular.atomtasks.ui.home.AtomAppState
@@ -19,9 +20,12 @@ fun DestinationScopeWithNoDependencies<*>.currentNavigator(): AppNavigator {
 @Composable
 internal fun AppNavigation(
     appState: AtomAppState,
-    fabClick: (() -> Unit) -> Unit,
+    fabClick: (String, () -> Unit) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val fabRegistrars = remember(fabClick) {
+        mutableMapOf<String, (() -> Unit) -> Unit>()
+    }
     DestinationsNavHost(
         engine = rememberNavHostEngine(),
         navController = appState.navController,
@@ -29,7 +33,10 @@ internal fun AppNavigation(
         modifier = modifier,
         dependenciesContainerBuilder = {
             dependency(currentNavigator())
-            dependency(fabClick)
+            val route = destination.route
+            dependency(fabRegistrars.getOrPut(route) {
+                { action -> fabClick(route, action) }
+            })
         },
     )
 }

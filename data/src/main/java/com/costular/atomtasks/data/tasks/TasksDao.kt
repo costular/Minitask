@@ -42,6 +42,10 @@ interface TasksDao {
     fun getAllTasksForDate(date: LocalDate): Flow<List<TaskAggregated>>
 
     @Transaction
+    @Query("SELECT * FROM tasks WHERE date BETWEEN :startDate AND :endDate ORDER BY date ASC, position ASC, id ASC")
+    fun observeTasksInRange(startDate: LocalDate, endDate: LocalDate): Flow<List<TaskAggregated>>
+
+    @Transaction
     @Query(
         """
             SELECT * FROM tasks

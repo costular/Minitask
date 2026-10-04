@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Group completed tasks in a collapsible section.
 - Search all task names with live results and task actions.
+- Browse tasks by day in a vertical timeline with sticky headers, a dedicated navigation tab, and a floating Today shortcut when scrolling past today.
 
 ### Changed
 

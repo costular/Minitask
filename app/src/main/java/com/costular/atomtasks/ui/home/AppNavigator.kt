@@ -3,6 +3,7 @@ package com.costular.atomtasks.ui.home
 import androidx.navigation.NavController
 import com.costular.atomtasks.agenda.ui.AgendaNavigator
 import com.costular.atomtasks.search.SearchNavigator
+import com.costular.atomtasks.verticaltasks.VerticalTasksNavigator
 import com.ramcosta.composedestinations.generated.search.destinations.SearchScreenDestination
 import com.costular.atomtasks.feature.onboarding.OnboardingNavigator
 import com.costular.atomtasks.settings.SettingsNavigator
@@ -16,7 +17,7 @@ import java.time.LocalDate
 
 class AppNavigator(
     private val navController: NavController,
-) : SettingsNavigator, AgendaNavigator, OnboardingNavigator, SearchNavigator {
+) : SettingsNavigator, AgendaNavigator, OnboardingNavigator, SearchNavigator, VerticalTasksNavigator {
 
     private val destinationsNavigator by lazy {
         navController.toDestinationsNavigator()

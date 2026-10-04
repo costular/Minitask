@@ -42,3 +42,4 @@ include(":feature:onboarding")
 include(":core:locale")
 
 include(":feature:search")
+include(":feature:vertical-tasks")

@@ -149,6 +149,8 @@
     <string name="search_no_results">No hay tareas que coincidan</string>
     <string name="tasks_load_error">No se pudieron cargar las tareas</string>
     <string name="tasks_retry">Reintentar</string>
+    <string name="vertical_tasks">Tareas por día</string>
+    <string name="vertical_empty_day">No hay tareas</string>
     <string name="task_more_actions">Acciones de la tarea</string>
     <string name="navigate_back">Volver</string>
     <string name="task_list_pending">Pendientes</string>

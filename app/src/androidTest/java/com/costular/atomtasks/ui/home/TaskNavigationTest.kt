@@ -30,6 +30,7 @@ import com.costular.atomtasks.data.tutorial.OnboardingShownUseCase
 import com.costular.atomtasks.preferences.DataStoreModule
 import com.costular.atomtasks.tasks.repository.TasksRepository
 import com.costular.atomtasks.ui.HiltTestActivity
+import com.costular.atomtasks.verticaltasks.VerticalTasksViewModel
 import com.costular.designsystem.theme.AtomTheme
 import com.google.common.truth.Truth.assertThat
 import com.ramcosta.composedestinations.generated.detail.destinations.TaskDetailScreenDestination
@@ -240,8 +241,36 @@ class TaskNavigationTest {
         }
     }
 
+    @Test
+    fun givenVerticalTasksWhenShownThenCreateButtonIsVisible() {
+        showHome()
+        selectTab(HomeNavigationDestination.VerticalTasks)
 
+        composeTestRule.onNodeWithTag(CreateTaskFabTag).assertIsDisplayed()
+    }
 
+    @Test
+    fun givenVerticalTasksWhenSearchOpensThenCreateButtonIsHidden() {
+        showHome()
+        selectTab(HomeNavigationDestination.VerticalTasks)
+
+        openSearch()
+
+        composeTestRule.onNodeWithTag(CreateTaskFabTag).assertDoesNotExist()
+    }
+
+    @Test
+    fun givenSearchFromVerticalTasksWhenBackPressedThenOriginIsRestored() {
+        showHome()
+        selectTab(HomeNavigationDestination.VerticalTasks)
+        openSearch()
+
+        composeTestRule.onNodeWithContentDescription(composeTestRule.getString(R.string.navigate_back)).performClick()
+
+        composeTestRule.runOnIdle {
+            assertThat(currentRoute()).isEqualTo(HomeNavigationDestination.VerticalTasks.screen.route)
+        }
+    }
 
     @Test
     fun givenHomeWhenSettingsOpensThenCreateButtonIsHidden() {
@@ -252,7 +281,33 @@ class TaskNavigationTest {
         composeTestRule.onNodeWithTag(CreateTaskFabTag).assertDoesNotExist()
     }
 
+    @Test
+    fun givenScrolledVerticalListWhenTabIsReopenedThenPinnedDateIsRestored() {
+        showHome()
+        selectTab(HomeNavigationDestination.VerticalTasks)
+        composeTestRule.onNode(hasScrollToIndexAction()).performScrollToIndex(80)
+        val expectedDay = selectedVerticalDay()
 
+        selectTab(HomeNavigationDestination.Agenda)
+        selectTab(HomeNavigationDestination.VerticalTasks)
+
+        assertThat(selectedVerticalDay()).isEqualTo(expectedDay)
+    }
+
+    @Test
+    fun givenScrolledVerticalListWhenCreateIsClickedThenPinnedDateIsUsed() {
+        showHome()
+        selectTab(HomeNavigationDestination.VerticalTasks)
+        composeTestRule.onNode(hasScrollToIndexAction()).performScrollToIndex(80)
+        val expectedDay = selectedVerticalDay()
+
+        composeTestRule.onNodeWithTag(CreateTaskFabTag).performClick()
+
+        composeTestRule.runOnIdle {
+            val args = TaskDetailScreenDestination.argsFrom(appState.navController.currentBackStackEntry?.arguments)
+            assertThat(args.defaultDate).isEqualTo(expectedDay)
+        }
+    }
 
     @Before
     fun setUp() = runTest {
@@ -316,4 +371,8 @@ class TaskNavigationTest {
 
     private fun currentRoute() = appState.navController.currentBackStackEntry?.destination?.route
 
+    private fun selectedVerticalDay(): LocalDate = composeTestRule.runOnIdle {
+        ViewModelProvider(appState.navController.currentBackStackEntry!!)
+            .get(VerticalTasksViewModel::class.java).state.value.selectedDay
+    }
 }

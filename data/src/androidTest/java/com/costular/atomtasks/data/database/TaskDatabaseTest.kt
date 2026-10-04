@@ -43,7 +43,33 @@ class TaskDatabaseTest {
         db.close()
     }
 
+    @Test
+    fun rangeIncludesBothBoundariesAndOrdersTasksByDateThenPosition() = runTest {
+        val start = LocalDate.of(2026, 10, 3)
+        val end = start.plusDays(1)
+        val template = TaskEntity(0, start, "Task", start)
+        tasksDao.addTask(template.copy(id = 1, day = start.minusDays(1)))
+        tasksDao.addTask(template.copy(id = 2, day = start, position = 2))
+        tasksDao.addTask(template.copy(id = 3, day = start, position = 1))
+        tasksDao.addTask(template.copy(id = 4, day = end, position = 0))
+        tasksDao.addTask(template.copy(id = 5, day = end.plusDays(1)))
+        val result = tasksDao.observeTasksInRange(start, end).first()
+        assertThat(result.map { it.task.id }).containsExactly(3L, 2L, 4L).inOrder()
+        assertThat(tasksDao.observeTasksInRange(end.plusDays(2), end.plusDays(3)).first()).isEmpty()
+    }
 
+    @Test
+    fun rangeObservationUpdatesWhenTaskIsInsertedAndCompleted() = runTest {
+        val day = LocalDate.of(2026, 10, 3)
+        tasksDao.observeTasksInRange(day, day).test {
+            assertThat(awaitItem()).isEmpty()
+            val id = tasksDao.createTask(TaskEntity(0, day, "Task", day))
+            assertThat(awaitItem().single().task.id).isEqualTo(id)
+            tasksDao.updateTaskDone(id, true)
+            assertThat(awaitItem().single().task.isDone).isTrue()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
 
     @Test
     fun searchFiltersInSqlAndOrdersAllDatesStatusesAndRecurringOccurrences() = runTest {
