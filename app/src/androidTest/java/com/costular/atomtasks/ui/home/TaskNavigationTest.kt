@@ -9,6 +9,8 @@ import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.hasScrollToIndexAction
 import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isSelectable
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -27,6 +29,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.costular.atomtasks.core.testing.ui.getString
 import com.costular.atomtasks.core.ui.R
 import com.costular.atomtasks.data.tutorial.OnboardingShownUseCase
+import com.costular.atomtasks.data.settings.DefaultTab
 import com.costular.atomtasks.preferences.DataStoreModule
 import com.costular.atomtasks.tasks.repository.TasksRepository
 import com.costular.atomtasks.ui.HiltTestActivity
@@ -78,6 +81,24 @@ class TaskNavigationTest {
     private var imeBottom = 0
 
     private val createdTaskIds = mutableListOf<Long>()
+
+    @Test
+    fun givenAgendaDefaultWhenHomeOpensThenAgendaIsSelected() {
+        showHome(DefaultTab.Agenda)
+
+        assertTabSelected(HomeNavigationDestination.Agenda)
+    }
+
+    @Test
+    fun givenVerticalDefaultWhenHomeOpensThenVerticalIsSelectedAndTabsRemainNavigable() {
+        showHome(DefaultTab.VerticalTasks)
+
+        assertTabSelected(HomeNavigationDestination.VerticalTasks)
+        selectTab(HomeNavigationDestination.Agenda)
+        assertTabSelected(HomeNavigationDestination.Agenda)
+        selectTab(HomeNavigationDestination.VerticalTasks)
+        assertTabSelected(HomeNavigationDestination.VerticalTasks)
+    }
 
     @Test
     fun givenHomeWhenSearchOpensThenKeyboardResizesContent() {
@@ -328,13 +349,13 @@ class TaskNavigationTest {
         createdTaskIds += tasks.createTask(name, LocalDate.now(), false, null, null, null)
     }
 
-    private fun showHome() {
+    private fun showHome(defaultTab: DefaultTab = DefaultTab.Agenda) {
         composeTestRule.setContent {
             AtomTheme {
                 val keyboardInset = WindowInsets.ime.getBottom(LocalDensity.current)
                 SideEffect { imeBottom = keyboardInset }
                 appState = rememberAtomAppState(rememberNavHostEngine().rememberNavController())
-                Home(appState)
+                Home(appState, defaultTab = defaultTab)
             }
         }
         composeTestRule.waitForIdle()
@@ -367,6 +388,14 @@ class TaskNavigationTest {
             composeTestRule.getString(destination.contentDescriptionResId),
             useUnmergedTree = true,
         ).performClick()
+    }
+
+    private fun assertTabSelected(destination: HomeNavigationDestination) {
+        composeTestRule.onNode(
+            hasText(composeTestRule.getString(destination.labelResId)).and(isSelectable()),
+        )
+            .assertIsSelected()
+        assertThat(currentRoute()).isEqualTo(destination.screen.route)
     }
 
     private fun currentRoute() = appState.navController.currentBackStackEntry?.destination?.route

@@ -115,6 +115,7 @@ dependencies {
     ksp(libs.compose.destinations.ksp)
 
     testImplementation(libs.android.junit)
+    testImplementation(projects.core.testing)
     testImplementation(libs.junit)
     testImplementation(libs.coroutines.test)
     testImplementation(libs.turbine)

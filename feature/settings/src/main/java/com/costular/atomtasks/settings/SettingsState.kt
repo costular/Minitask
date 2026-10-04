@@ -2,10 +2,12 @@ package com.costular.atomtasks.settings
 
 import com.costular.atomtasks.data.settings.dailyreminder.DailyReminder
 import com.costular.atomtasks.data.settings.Theme
+import com.costular.atomtasks.data.settings.DefaultTab
 import android.net.Uri
 
 data class SettingsState(
     val theme: Theme = Theme.System,
+    val defaultTab: DefaultTab = DefaultTab.Agenda,
     val moveUndoneTasksTomorrowAutomatically: Boolean = true,
     val taskListSectionsEnabled: Boolean = false,
     val dailyReminder: DailyReminder? = null,

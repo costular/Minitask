@@ -63,7 +63,9 @@ class MainActivity : ComponentActivity() {
                 onDispose { }
             }
 
-            App(isDarkTheme = isDarkTheme)
+            uiState.defaultTab?.let { defaultTab ->
+                App(isDarkTheme = isDarkTheme, defaultTab = defaultTab)
+            }
         }
     }
 }

@@ -6,8 +6,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.costular.atomtasks.ui.home.AppNavigator
 import com.costular.atomtasks.ui.home.AtomAppState
+import com.costular.atomtasks.data.settings.DefaultTab
 import com.ramcosta.composedestinations.DestinationsNavHost
 import com.ramcosta.composedestinations.generated.NavGraphs
+import com.ramcosta.composedestinations.generated.agenda.navgraphs.AgendaNavGraph
+import com.ramcosta.composedestinations.generated.verticaltasks.navgraphs.VerticalTasksNavGraph
 import com.ramcosta.composedestinations.navigation.dependency
 import com.ramcosta.composedestinations.rememberNavHostEngine
 import com.ramcosta.composedestinations.scope.DestinationScopeWithNoDependencies
@@ -21,6 +24,7 @@ fun DestinationScopeWithNoDependencies<*>.currentNavigator(): AppNavigator {
 internal fun AppNavigation(
     appState: AtomAppState,
     fabClick: (String, () -> Unit) -> Unit,
+    defaultTab: DefaultTab,
     modifier: Modifier = Modifier,
 ) {
     val fabRegistrars = remember(fabClick) {
@@ -30,6 +34,10 @@ internal fun AppNavigation(
         engine = rememberNavHostEngine(),
         navController = appState.navController,
         navGraph = NavGraphs.main,
+        start = when (defaultTab) {
+            DefaultTab.Agenda -> AgendaNavGraph
+            DefaultTab.VerticalTasks -> VerticalTasksNavGraph
+        },
         modifier = modifier,
         dependenciesContainerBuilder = {
             dependency(currentNavigator())

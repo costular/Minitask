@@ -2,6 +2,14 @@ package com.costular.atomtasks.settings
 
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isSelectable
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import com.costular.atomtasks.core.testing.ui.getString
+import com.costular.atomtasks.core.ui.R
+import com.costular.atomtasks.data.settings.DefaultTab
 import androidx.compose.ui.test.printToLog
 import com.costular.atomtasks.core.testing.ui.ComposeProvider
 import io.mockk.mockk
@@ -22,6 +30,7 @@ class SettingsScreenTest : ComposeProvider {
 
     private val onUpdateAutoforwardTasks: (Boolean) -> Unit = mockk(relaxed = true)
     private val onUpdateTaskListSections: (Boolean) -> Unit = mockk(relaxed = true)
+    private val onUpdateDefaultTab: (DefaultTab) -> Unit = mockk(relaxed = true)
 
     @Before
     @Throws(Exception::class)
@@ -105,11 +114,57 @@ class SettingsScreenTest : ComposeProvider {
         verify(exactly = 1) { onUpdateTaskListSections(false) }
     }
 
+    @Test
+    fun `should show Agenda selected and save vertical when choosing it`() {
+        givenSettingsScreen()
+        openDefaultTabSelector()
+
+        defaultTabOption(R.string.home_menu_agenda).assertIsSelected()
+        defaultTabOption(R.string.vertical_tasks).performClick()
+
+        verify(exactly = 1) { onUpdateDefaultTab(DefaultTab.VerticalTasks) }
+        composeTestRule.onNodeWithText(composeTestRule.getString(R.string.settings_default_tab_description))
+            .assertDoesNotExist()
+    }
+
+    @Test
+    fun `should show vertical selected and save Agenda when choosing it`() {
+        givenSettingsScreen(SettingsState(defaultTab = DefaultTab.VerticalTasks))
+        openDefaultTabSelector()
+
+        defaultTabOption(R.string.vertical_tasks).assertIsSelected()
+        defaultTabOption(R.string.home_menu_agenda).performClick()
+
+        verify(exactly = 1) { onUpdateDefaultTab(DefaultTab.Agenda) }
+    }
+
+    @Test
+    fun `should dismiss the default tab chooser without saving when cancelled`() {
+        givenSettingsScreen()
+        openDefaultTabSelector()
+
+        composeTestRule.onNodeWithText(composeTestRule.getString(R.string.cancel)).performClick()
+
+        verify(exactly = 0) { onUpdateDefaultTab(any()) }
+        composeTestRule.onNodeWithText(composeTestRule.getString(R.string.settings_default_tab_description))
+            .assertDoesNotExist()
+    }
+
+    private fun openDefaultTabSelector() {
+        composeTestRule.onNodeWithText(composeTestRule.getString(R.string.settings_default_tab_title))
+            .performClick()
+    }
+
+    private fun defaultTabOption(labelResId: Int) = composeTestRule.onNode(
+        hasText(composeTestRule.getString(labelResId)).and(isSelectable()),
+    )
+
     private fun givenSettingsScreen(state: SettingsState = SettingsState.Empty) {
         composeTestRule.setContent {
             SettingsScreen(
                 state = state,
                 navigator = EmptySettingsNavigator,
+                onUpdateDefaultTab = onUpdateDefaultTab,
                 onUpdateAutoforwardTasks = onUpdateAutoforwardTasks,
                 onUpdateTaskListSections = onUpdateTaskListSections,
                 onEnableDailyReminder = {},

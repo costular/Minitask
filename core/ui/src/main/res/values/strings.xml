@@ -105,6 +105,8 @@
     <string name="settings_theme_dark">Dark</string>
     <string name="settings_theme_system">System</string>
     <string name="settings_general_title">General</string>
+    <string name="settings_default_tab_title">Default home</string>
+    <string name="settings_default_tab_description">Choose the home screen shown when you open the app.</string>
     <string name="settings_tasks_title">Tasks</string>
     <string name="settings_tasks_autoforward_tasks_title">Auto-Postpone</string>
     <string name="settings_tasks_autoforward_tasks_description">Unfinished tasks will be moved to the next day automatically.</string>

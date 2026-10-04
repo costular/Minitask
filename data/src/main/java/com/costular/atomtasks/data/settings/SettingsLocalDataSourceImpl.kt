@@ -13,10 +13,23 @@ import kotlinx.serialization.json.Json
 import java.time.LocalTime
 import javax.inject.Inject
 
+@Suppress("TooManyFunctions")
 class SettingsLocalDataSourceImpl @Inject constructor(
     private val dataStore: DataStore<Preferences>,
     private val json: Json,
 ) : SettingsLocalDataSource {
+
+    private val preferenceDefaultTab = stringPreferencesKey("default_tab")
+
+    override fun observeDefaultTab(): Flow<String> = dataStore.data.map { preferences ->
+        preferences[preferenceDefaultTab] ?: DefaultTab.Agenda.preferenceValue
+    }
+
+    override suspend fun setDefaultTab(defaultTab: String) {
+        dataStore.edit { settings ->
+            settings[preferenceDefaultTab] = defaultTab
+        }
+    }
 
     private val preferenceTaskListSections = booleanPreferencesKey("task_list_sections_enabled")
 

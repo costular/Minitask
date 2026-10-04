@@ -7,9 +7,17 @@ import kotlinx.coroutines.flow.map
 import java.time.LocalTime
 import javax.inject.Inject
 
+@Suppress("TooManyFunctions")
 class SettingsRepositoryImpl @Inject constructor(
     private val settingsLocalDataSource: SettingsLocalDataSource,
 ) : SettingsRepository {
+
+    override fun observeDefaultTab(): Flow<DefaultTab> =
+        settingsLocalDataSource.observeDefaultTab().map(DefaultTab::fromString)
+
+    override suspend fun setDefaultTab(defaultTab: DefaultTab) {
+        settingsLocalDataSource.setDefaultTab(defaultTab.preferenceValue)
+    }
 
     override fun observeTaskListSectionsEnabled(): Flow<Boolean> =
         settingsLocalDataSource.observeTaskListSectionsEnabled()

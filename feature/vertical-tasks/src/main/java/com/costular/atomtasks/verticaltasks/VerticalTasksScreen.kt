@@ -207,8 +207,6 @@ private fun VerticalTasksHeader(
             horizontalArrangement = Arrangement.SpaceBetween,
             itemVerticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(stringResource(R.string.vertical_tasks), style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.padding(AppTheme.dimens.contentMargin))
             Row(
                 modifier = Modifier.weight(1f),
                 verticalAlignment = Alignment.CenterVertically,

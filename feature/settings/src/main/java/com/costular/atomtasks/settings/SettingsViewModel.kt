@@ -14,6 +14,7 @@ import com.costular.atomtasks.data.backup.ExportBackupUseCase
 import com.costular.atomtasks.data.backup.HasDataUseCase
 import com.costular.atomtasks.data.backup.ImportBackupUseCase
 import com.costular.atomtasks.data.settings.GetThemeUseCase
+import com.costular.atomtasks.data.settings.DefaultTab
 import com.costular.atomtasks.data.settings.IsAutoforwardTasksSettingEnabledUseCase
 import com.costular.atomtasks.data.settings.SetAutoforwardTasksInteractor
 import com.costular.atomtasks.data.settings.SettingsRepository
@@ -53,6 +54,7 @@ class SettingsViewModel @Inject constructor(
 ) : MviViewModel<SettingsState>(SettingsState.Empty) {
     init {
         observeTheme()
+        observeDefaultTab()
         observeAutoforwardTasks()
         observeTaskListSections()
         observeDailyReminder()
@@ -137,6 +139,20 @@ class SettingsViewModel @Inject constructor(
                         state.value.dailyReminder?.isEnabled == true
                 )
             }
+        }
+    }
+
+    private fun observeDefaultTab() {
+        viewModelScope.launch {
+            settingsRepository.observeDefaultTab().collectLatest { defaultTab ->
+                setState { copy(defaultTab = defaultTab) }
+            }
+        }
+    }
+
+    fun setDefaultTab(defaultTab: DefaultTab) {
+        viewModelScope.launch {
+            settingsRepository.setDefaultTab(defaultTab)
         }
     }
 

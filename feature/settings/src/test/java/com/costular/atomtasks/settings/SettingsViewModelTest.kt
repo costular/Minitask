@@ -5,6 +5,7 @@ import com.costular.atomtasks.analytics.AtomAnalytics
 import com.costular.atomtasks.core.testing.MviViewModelTest
 import com.costular.atomtasks.core.ui.SnackbarManager
 import com.costular.atomtasks.data.settings.GetThemeUseCase
+import com.costular.atomtasks.data.settings.DefaultTab
 import com.costular.atomtasks.data.settings.IsAutoforwardTasksSettingEnabledUseCase
 import com.costular.atomtasks.data.settings.SetAutoforwardTasksInteractor
 import com.costular.atomtasks.data.settings.SettingsRepository
@@ -38,6 +39,7 @@ class SettingsViewModelTest : MviViewModelTest() {
     private val setThemeUseCase: SetThemeUseCase = mockk(relaxed = true)
     private val settingsRepository: SettingsRepository = mockk(relaxUnitFun = true)
     private val taskListSectionsEnabled = MutableStateFlow(false)
+    private val defaultTab = MutableStateFlow(DefaultTab.Agenda)
     private val isAutoforwardTasksInteractor: IsAutoforwardTasksSettingEnabledUseCase =
         mockk(relaxed = true)
     private val setAutoforwardTasksInteractor: SetAutoforwardTasksInteractor = mockk(relaxed = true)
@@ -59,6 +61,7 @@ class SettingsViewModelTest : MviViewModelTest() {
     private fun initialize() {
         coEvery { areExactRemindersAvailable(Unit) } returns true
         coEvery { settingsRepository.observeTaskListSectionsEnabled() } returns taskListSectionsEnabled
+        coEvery { settingsRepository.observeDefaultTab() } returns defaultTab
         sut = SettingsViewModel(
             getThemeUseCase = getThemeUseCase,
             setThemeUseCase = setThemeUseCase,
@@ -75,6 +78,22 @@ class SettingsViewModelTest : MviViewModelTest() {
             snackbarManager = snackbarManager,
             context = context,
         )
+    }
+
+    @Test
+    fun `should expose the saved default tab and observe changes`() = runTest {
+        defaultTab.value = DefaultTab.VerticalTasks
+        assertThat(sut.state.value.defaultTab).isEqualTo(DefaultTab.VerticalTasks)
+
+        defaultTab.value = DefaultTab.Agenda
+        assertThat(sut.state.value.defaultTab).isEqualTo(DefaultTab.Agenda)
+    }
+
+    @Test
+    fun `should save the selected default tab`() = runTest {
+        sut.setDefaultTab(DefaultTab.VerticalTasks)
+
+        coVerify(exactly = 1) { settingsRepository.setDefaultTab(DefaultTab.VerticalTasks) }
     }
 
     @Test

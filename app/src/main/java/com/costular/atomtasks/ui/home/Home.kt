@@ -26,6 +26,7 @@ import com.costular.atomtasks.core.ui.rememberAppSnackbarState
 import com.costular.atomtasks.core.ui.DestinationsScaffold
 import com.costular.atomtasks.core.ui.SnackbarController
 import com.costular.atomtasks.ui.AppNavigation
+import com.costular.atomtasks.data.settings.DefaultTab
 import com.costular.designsystem.theme.AtomTheme
 import com.ramcosta.composedestinations.generated.agenda.destinations.AgendaScreenDestination
 import com.ramcosta.composedestinations.generated.verticaltasks.destinations.VerticalTasksScreenDestination
@@ -37,6 +38,8 @@ internal const val CreateTaskFabTag = "CreateTaskFab"
 @Composable
 fun App(
     isDarkTheme: Boolean,
+    defaultTab: DefaultTab,
+    modifier: Modifier = Modifier,
 ) {
     AtomTheme(darkTheme = isDarkTheme) {
         val engine = rememberNavHostEngine()
@@ -46,6 +49,8 @@ fun App(
             atomAppState = rememberAtomAppState(
                 navController = navController,
             ),
+            defaultTab = defaultTab,
+            modifier = modifier,
         )
     }
 }
@@ -55,6 +60,8 @@ fun App(
 @Composable
 internal fun Home(
     atomAppState: AtomAppState,
+    modifier: Modifier = Modifier,
+    defaultTab: DefaultTab = DefaultTab.Agenda,
 ) {
     val fabActions = remember { mutableStateMapOf<String, () -> Unit>() }
     val setFabOnClick = remember {
@@ -69,6 +76,7 @@ internal fun Home(
     )
 
     NavigationSuiteScaffold(
+        modifier = modifier,
         navigationSuiteItems = {
             HomeNavigationDestination.entries.forEach { destination ->
                 val isCurrentDestination = currentDestination == destination.screen
@@ -107,6 +115,7 @@ internal fun Home(
                     .fillMaxSize()
                     .padding(padding),
                 appState = atomAppState,
+                defaultTab = defaultTab,
                 fabClick = setFabOnClick,
             )
         }

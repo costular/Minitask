@@ -4,7 +4,11 @@ import com.costular.atomtasks.data.settings.dailyreminder.DailyReminder
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalTime
 
+@Suppress("TooManyFunctions")
 interface SettingsRepository {
+    fun observeDefaultTab(): Flow<DefaultTab>
+    suspend fun setDefaultTab(defaultTab: DefaultTab)
+
     fun observeTaskListSectionsEnabled(): Flow<Boolean>
     suspend fun setTaskListSectionsEnabled(isEnabled: Boolean)
 

@@ -26,6 +26,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -39,6 +42,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.costular.atomtasks.core.ui.R
 import com.costular.atomtasks.core.ui.dialogs.ExactAlarmRationale
 import com.costular.atomtasks.data.settings.Theme
+import com.costular.atomtasks.data.settings.DefaultTab
 import com.costular.atomtasks.settings.sections.BackupSettingsSection
 import com.costular.atomtasks.settings.sections.GeneralSection
 import com.costular.atomtasks.settings.sections.SettingsAboutSection
@@ -100,6 +104,7 @@ fun SettingsScreen(
     SettingsScreen(
         state = state,
         navigator = navigator,
+        onUpdateDefaultTab = viewModel::setDefaultTab,
         onUpdateAutoforwardTasks = viewModel::setAutoforwardTasksEnabled,
         onUpdateTaskListSections = viewModel::setTaskListSectionsEnabled,
         onEnableDailyReminder = viewModel::updateDailyReminder,
@@ -113,18 +118,33 @@ fun SettingsScreen(
 @VisibleForTesting
 @OptIn(ExperimentalMaterial3Api::class)
 fun SettingsScreen(
-    scrollState: ScrollState = rememberScrollState(),
     state: SettingsState,
     navigator: SettingsNavigator,
+    onUpdateDefaultTab: (DefaultTab) -> Unit,
     onUpdateAutoforwardTasks: (Boolean) -> Unit,
     onUpdateTaskListSections: (Boolean) -> Unit,
     onEnableDailyReminder: (Boolean) -> Unit,
     onClickDailyReminder: () -> Unit,
     onBackupLocal: () -> Unit,
     onRestoreLocal: () -> Unit,
+    modifier: Modifier = Modifier,
+    scrollState: ScrollState = rememberScrollState(),
 ) {
+    var isDefaultTabSelectorOpen by rememberSaveable { mutableStateOf(false) }
+
+    if (isDefaultTabSelectorOpen) {
+        DefaultTabSelectorDialog(
+            selectedTab = state.defaultTab,
+            onSelectTab = { tab ->
+                onUpdateDefaultTab(tab)
+                isDefaultTabSelectorOpen = false
+            },
+            onDismiss = { isDefaultTabSelectorOpen = false },
+        )
+    }
+
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         topBar = {
             AtomTopBar(
                 title = {
@@ -146,6 +166,7 @@ fun SettingsScreen(
             scrollState = scrollState,
             state = state,
             navigator = navigator,
+            onSelectDefaultTab = { isDefaultTabSelectorOpen = true },
             onUpdateAutoforwardTasks = onUpdateAutoforwardTasks,
             onUpdateTaskListSections = onUpdateTaskListSections,
             onEnableDailyReminder = onEnableDailyReminder,
@@ -163,6 +184,7 @@ private fun SettingsContent(
     scrollState: ScrollState,
     state: SettingsState,
     navigator: SettingsNavigator,
+    onSelectDefaultTab: () -> Unit,
     onUpdateAutoforwardTasks: (Boolean) -> Unit,
     onUpdateTaskListSections: (Boolean) -> Unit,
     onEnableDailyReminder: (Boolean) -> Unit,
@@ -180,6 +202,9 @@ private fun SettingsContent(
     ) {
         GeneralSection(
             theme = state.theme,
+            defaultTab = state.defaultTab,
+            onSelectDefaultTab = onSelectDefaultTab,
+            modifier = Modifier.fillMaxWidth(),
             onSelectTheme = {
                 navigator.navigateToSelectTheme(state.theme.asString())
             },
@@ -238,6 +263,7 @@ private fun SettingsScreenPreview() {
         SettingsScreen(
             state = SettingsState(),
             navigator = EmptySettingsNavigator,
+            onUpdateDefaultTab = {},
             onUpdateAutoforwardTasks = {},
             onUpdateTaskListSections = {},
             onEnableDailyReminder = {},
@@ -334,5 +360,3 @@ private fun rememberBackupLaunchers(
 
     return createDocumentLauncher to openDocumentLauncher
 }
-
-
