@@ -117,14 +117,46 @@ class AgendaViewModelTest : MviViewModelTest() {
     }
 
     @Test
-    fun `should collapse header when select a day`() = runTest {
+    fun `should keep header expanded and load tasks when select a day`() = runTest {
+        val selectedDate = LocalDate.now().plusDays(1)
         sut.toggleHeader()
-        sut.setSelectedDay(LocalDate.now().plusDays(1))
+        sut.setSelectedDay(selectedDate)
 
         sut.state.test {
-            assertThat(expectMostRecentItem().isHeaderExpanded).isFalse()
+            val state = expectMostRecentItem()
+            assertThat(state.isHeaderExpanded).isTrue()
+            assertThat(state.selectedDay.date).isEqualTo(selectedDate)
+            assertThat(state.tasks).isEqualTo(TasksState.Success(emptyList<Task>().toImmutableList()))
             cancelAndIgnoreRemainingEvents()
         }
+        coVerify { observeTasksUseCase.invoke(ObserveTasksUseCase.Params(day = selectedDate)) }
+        verify(exactly = 1) { atomAnalytics.track(AgendaAnalytics.ExpandCalendar) }
+        verify(exactly = 0) { atomAnalytics.track(AgendaAnalytics.CollapseCalendar) }
+        verify(exactly = 1) {
+            atomAnalytics.track(AgendaAnalytics.NavigateToDay(selectedDate.toString()))
+        }
+    }
+
+    @Test
+    fun `should keep header collapsed when select a day`() = runTest {
+        val selectedDate = LocalDate.now().plusDays(1)
+        sut.setSelectedDay(selectedDate)
+
+        assertThat(sut.state.value.isHeaderExpanded).isFalse()
+        assertThat(sut.state.value.selectedDay.date).isEqualTo(selectedDate)
+        coVerify { observeTasksUseCase.invoke(ObserveTasksUseCase.Params(day = selectedDate)) }
+    }
+
+    @Test
+    fun `should keep header expanded when select today`() = runTest {
+        sut.setSelectedDay(LocalDate.now().plusMonths(1))
+        sut.toggleHeader()
+
+        sut.setSelectedDayToday()
+
+        assertThat(sut.state.value.isHeaderExpanded).isTrue()
+        assertThat(sut.state.value.selectedDay.date).isEqualTo(LocalDate.now())
+        verify(exactly = 1) { atomAnalytics.track(AgendaAnalytics.SelectToday) }
     }
 
     @Test

@@ -94,7 +94,7 @@ class AgendaViewModel @Inject constructor(
     }
 
     fun setSelectedDay(localDate: LocalDate) = viewModelScope.launch {
-        setState { copy(selectedDay = localDate.asDay(), isHeaderExpanded = false) }
+        setState { copy(selectedDay = localDate.asDay()) }
         loadTasks()
         atomAnalytics.track(NavigateToDay(localDate.toString()))
     }
@@ -209,18 +209,6 @@ class AgendaViewModel @Inject constructor(
     fun orderTaskTutorialDismissed() {
         viewModelScope.launch {
             taskOrderTutorialDismissedUseCase(Unit)
-        }
-    }
-
-    fun openCalendarView() {
-        viewModelScope.launch {
-            setState { copy(shouldShowCalendarView = true) }
-        }
-    }
-
-    fun dismissCalendarView() {
-        viewModelScope.launch {
-            setState { copy(shouldShowCalendarView = false) }
         }
     }
 }

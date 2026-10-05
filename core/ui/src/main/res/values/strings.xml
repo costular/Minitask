@@ -189,4 +189,8 @@
     <string name="settings_tasks_sections_title">Group completed tasks</string>
     <string name="settings_tasks_sections_description">Show pending and completed tasks in separate sections.</string>
 
+    <string name="agenda_expand_calendar">Show monthly calendar</string>
+    <string name="agenda_collapse_calendar">Show weekly calendar</string>
+    <string name="agenda_calendar_expanded">Expanded</string>
+    <string name="agenda_calendar_collapsed">Collapsed</string>
 </resources>

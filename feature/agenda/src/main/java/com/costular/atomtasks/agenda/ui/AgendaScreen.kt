@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -29,7 +28,6 @@ import com.costular.atomtasks.core.ui.tasks.TaskInteractionEffects
 import com.costular.atomtasks.tasks.model.Reminder
 import com.costular.atomtasks.tasks.model.Task
 import com.costular.designsystem.components.CircularLoadingIndicator
-import com.costular.designsystem.dialogs.DatePickerDialog
 import com.costular.designsystem.theme.AppTheme
 import com.costular.designsystem.theme.AtomTheme
 import com.costular.designsystem.util.supportWideScreen
@@ -107,8 +105,8 @@ internal fun AgendaScreen(
         onSelectDate = viewModel::setSelectedDay,
         onSearch = navigator::navigateToSearch,
         onSelectToday = viewModel::setSelectedDayToday,
+        onToggleHeader = viewModel::toggleHeader,
         onMarkTask = viewModel::onMarkTask,
-        onClickOpenCalendarView = viewModel::openCalendarView,
         openTaskAction = { task ->
             viewModel.onOpenTaskActions()
             navigator.openTaskActions(
@@ -125,19 +123,16 @@ internal fun AgendaScreen(
         onDeleteTask = {
             viewModel.askDelete(it.id)
         },
-        onDismissCalendarView = viewModel::dismissCalendarView,
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Suppress("LongMethod", "LongParameterList", "ForbiddenComment")
 @Composable
 fun AgendaScreen(
     state: AgendaState,
     onSelectDate: (LocalDate) -> Unit,
     onSelectToday: () -> Unit,
-    onClickOpenCalendarView: () -> Unit,
-    onDismissCalendarView: () -> Unit,
+    onToggleHeader: () -> Unit,
     onMarkTask: (Long, Boolean) -> Unit,
     openTaskDetail: (Task) -> Unit,
     openTaskAction: (Task) -> Unit,
@@ -147,17 +142,6 @@ fun AgendaScreen(
     modifier: Modifier = Modifier,
     onSearch: () -> Unit = {},
 ) {
-    if (state.shouldShowCalendarView) {
-        DatePickerDialog(
-            onDismiss = onDismissCalendarView,
-            currentDate = state.selectedDay.date,
-            onDateSelected = {
-                onSelectDate(it)
-                onDismissCalendarView()
-            },
-        )
-    }
-
     val initialDate = remember { LocalDate.now() }
     val startIndex = Int.MAX_VALUE / 2
     val initialPage = remember(initialDate, state.selectedDay) {
@@ -192,11 +176,12 @@ fun AgendaScreen(
     ) {
         AgendaHeader(
             selectedDay = state.selectedDay,
+            isExpanded = state.isHeaderExpanded,
+            onToggleHeader = onToggleHeader,
             onSelectDate = onSelectDate,
             // Start using date provider instead of fixed date
             shouldShowTodayAction = state.selectedDay.date != LocalDate.now(),
             onSelectToday = onSelectToday,
-            onClickCalendar = onClickOpenCalendarView,
             onSearch = onSearch,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -326,13 +311,12 @@ fun AgendaPreview() {
             ),
             onSelectDate = {},
             onSelectToday = {},
+            onToggleHeader = {},
             onMarkTask = { _, _ -> },
             openTaskAction = {},
             onDragTask = { _, _ -> },
             onDragStopped = {},
             openTaskDetail = {},
-            onDismissCalendarView = {},
-            onClickOpenCalendarView = {},
             onDeleteTask = {},
         )
     }

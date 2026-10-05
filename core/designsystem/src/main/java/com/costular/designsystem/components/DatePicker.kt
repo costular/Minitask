@@ -68,6 +68,7 @@ private const val MonthsToShow = 100L
 fun DatePicker(
     modifier: Modifier = Modifier,
     selectedDay: LocalDate = LocalDate.now(),
+    dayContent: (@Composable BoxScope.(CalendarDay, Boolean, () -> Unit) -> Unit)? = null,
     onDateSelected: (LocalDate) -> Unit,
 ) {
     val currentMonth = remember(selectedDay) { selectedDay.yearMonth }
@@ -109,11 +110,15 @@ fun DatePicker(
         HorizontalCalendar(
             state = state,
             dayContent = { day ->
-                Day(
-                    day = day,
-                    isSelected = selectedDay == day.date,
-                    onClick = { onDateSelected(it.date) },
-                )
+                if (dayContent != null) {
+                    dayContent(day, selectedDay == day.date) { onDateSelected(day.date) }
+                } else {
+                    Day(
+                        day = day,
+                        isSelected = selectedDay == day.date,
+                        onClick = { onDateSelected(it.date) },
+                    )
+                }
             },
             monthHeader = { month ->
                 Weekdays(

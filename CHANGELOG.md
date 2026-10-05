@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Expand the Agenda header to browse a compact monthly calendar and select a day.
 - Choose Agenda or Vertical as the default home screen when opening the app.
 - Group completed tasks in a collapsible section.
 - Search all task names with live results and task actions.

@@ -167,4 +167,8 @@
     <string name="settings_tasks_sections_title">Agrupar tareas completadas</string>
     <string name="settings_tasks_sections_description">Muestra las tareas pendientes y completadas en secciones separadas.</string>
 
+    <string name="agenda_expand_calendar">Mostrar calendario mensual</string>
+    <string name="agenda_collapse_calendar">Mostrar calendario semanal</string>
+    <string name="agenda_calendar_expanded">Expandido</string>
+    <string name="agenda_calendar_collapsed">Contraído</string>
 </resources>
