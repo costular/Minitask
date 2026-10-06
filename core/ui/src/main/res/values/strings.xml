@@ -193,4 +193,10 @@
     <string name="agenda_collapse_calendar">Show weekly calendar</string>
     <string name="agenda_calendar_expanded">Expanded</string>
     <string name="agenda_calendar_collapsed">Collapsed</string>
+    <string name="vertical_past">Past</string>
+    <string name="vertical_load_older">Load older tasks</string>
+    <string name="completed_tasks">Completed tasks</string>
+    <string name="completed_tasks_empty">No completed tasks</string>
+    <string name="settings_past_tasks_undone_only_title">Show only unfinished past tasks</string>
+    <string name="settings_past_tasks_undone_only_description">Hide completed tasks in the Past section of the vertical timeline.</string>
 </resources>

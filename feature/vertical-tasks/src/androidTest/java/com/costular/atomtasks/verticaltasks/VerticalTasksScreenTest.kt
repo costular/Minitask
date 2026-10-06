@@ -259,6 +259,36 @@ class VerticalTasksScreenTest : AndroidTest() {
         assertThat(anchoredDay).isEqualTo(today.plusDays(1))
     }
 
+    @Test
+    fun givenCompletedTasksIconWhenClickedThenCallbackRuns() {
+        var opens = 0
+        showScreen(onCompletedTasks = { opens++ })
+        composeTestRule.onNodeWithContentDescription(composeTestRule.getString(R.string.completed_tasks)).performClick()
+        assertThat(opens).isEqualTo(1)
+    }
+
+    @Test
+    fun givenEmptyPastWhenLoadOlderClickedThenCallbackRuns() {
+        var loads = 0
+        showScreen(state = populatedState(includeYesterday = true), onLoadOlder = { loads++ })
+        composeTestRule.onNode(hasText(composeTestRule.getString(R.string.vertical_past)) and heading).assertIsDisplayed()
+        composeTestRule.onNodeWithText(composeTestRule.getString(R.string.vertical_load_older)).performClick()
+        assertThat(loads).isEqualTo(1)
+    }
+
+    @Test
+    fun givenPastOnlyWindowThenTodayRemainsReachable() {
+        val past = today.minusDays(90)
+        val window = DateWindow.around(past)
+        showScreen(state = VerticalTasksState(
+            selectedDay = past,
+            window = window,
+            rows = listOf(VerticalTaskRow.PastHeader(window.end), VerticalTaskRow.LoadOlder(window.start)).toImmutableList(),
+            isLoading = false,
+        ))
+        composeTestRule.onNode(todayBubble()).assertIsDisplayed()
+    }
+
     private fun showTodayReturnScreen(onToday: () -> Unit = {}): State<VerticalTasksState> {
         val state = mutableStateOf(populatedState())
         composeTestRule.setContent {
@@ -274,6 +304,8 @@ class VerticalTasksScreenTest : AndroidTest() {
                     },
                     onScrollHandled = { state.value = state.value.copy(scrollTarget = null) },
                     onSearch = {},
+                    onCompletedTasks = {},
+                    onLoadOlder = {},
                     onCalendar = {},
                     onDismissCalendar = {},
                     onSelectDay = {},
@@ -309,8 +341,8 @@ class VerticalTasksScreenTest : AndroidTest() {
         val state = stateFor(tasks + future)
         return if (includeYesterday) {
             state.copy(rows = (listOf(
-                VerticalTaskRow.Header(today.minusDays(1)),
-                VerticalTaskRow.Empty(today.minusDays(1)),
+                VerticalTaskRow.PastHeader(today.minusDays(1)),
+                VerticalTaskRow.LoadOlder(today.minusDays(30)),
             ) + state.rows).toImmutableList())
         } else {
             state
@@ -332,6 +364,8 @@ class VerticalTasksScreenTest : AndroidTest() {
         state: VerticalTasksState = VerticalTasksState(today, DateWindow.around(today), isLoading = false),
         onToday: () -> Unit = {},
         onSearch: () -> Unit = {},
+        onCompletedTasks: () -> Unit = {},
+        onLoadOlder: () -> Unit = {},
         onCalendar: () -> Unit = {},
         onAnchor: (LocalDate, Long?, Int) -> Unit = { _, _, _ -> },
         onMove: (Long, Long) -> Unit = { _, _ -> },
@@ -343,6 +377,8 @@ class VerticalTasksScreenTest : AndroidTest() {
                     state = state,
                     onToday = onToday,
                     onSearch = onSearch,
+                    onCompletedTasks = onCompletedTasks,
+                    onLoadOlder = onLoadOlder,
                     onCalendar = onCalendar,
                     onDismissCalendar = {},
                     onSelectDay = {},

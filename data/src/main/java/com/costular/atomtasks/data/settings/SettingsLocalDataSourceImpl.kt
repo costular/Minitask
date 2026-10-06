@@ -31,6 +31,18 @@ class SettingsLocalDataSourceImpl @Inject constructor(
         }
     }
 
+    private val preferencePastTasksUndoneOnly = booleanPreferencesKey("past_tasks_undone_only_enabled")
+
+    override fun observePastTasksUndoneOnlyEnabled(): Flow<Boolean> = dataStore.data.map { preferences ->
+        preferences[preferencePastTasksUndoneOnly] ?: false
+    }
+
+    override suspend fun setPastTasksUndoneOnlyEnabled(isEnabled: Boolean) {
+        dataStore.edit { settings ->
+            settings[preferencePastTasksUndoneOnly] = isEnabled
+        }
+    }
+
     private val preferenceTaskListSections = booleanPreferencesKey("task_list_sections_enabled")
 
     override fun observeTaskListSectionsEnabled(): Flow<Boolean> = dataStore.data.map { preferences ->

@@ -82,6 +82,7 @@ dependencies {
     implementation(project(":feature:agenda"))
     implementation(projects.feature.search)
     implementation(projects.feature.verticalTasks)
+    implementation(projects.feature.completedTasks)
     implementation(projects.core.ui.tasks)
     implementation(project(":feature:settings"))
     implementation(projects.common.tasks)

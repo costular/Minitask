@@ -57,6 +57,9 @@ internal class DefaultTasksLocalDataSource @Inject constructor(
         }
     }
 
+    override fun observeCompletedTasks(): Flow<List<TaskAggregated>> =
+        tasksDao.observeCompletedTasks().distinctUntilChanged()
+
     override fun observeTasksInRange(startDate: LocalDate, endDate: LocalDate): Flow<List<TaskAggregated>> =
         tasksDao.observeTasksInRange(startDate, endDate).distinctUntilChanged()
 

@@ -171,4 +171,10 @@
     <string name="agenda_collapse_calendar">Mostrar calendario semanal</string>
     <string name="agenda_calendar_expanded">Expandido</string>
     <string name="agenda_calendar_collapsed">Contraído</string>
+    <string name="vertical_past">Pasado</string>
+    <string name="vertical_load_older">Cargar tareas anteriores</string>
+    <string name="completed_tasks">Tareas completadas</string>
+    <string name="completed_tasks_empty">No hay tareas completadas</string>
+    <string name="settings_past_tasks_undone_only_title">Mostrar solo tareas pasadas pendientes</string>
+    <string name="settings_past_tasks_undone_only_description">Oculta las tareas completadas en la sección Pasado de la lista vertical.</string>
 </resources>

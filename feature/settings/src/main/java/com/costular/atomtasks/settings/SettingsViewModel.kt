@@ -57,6 +57,7 @@ class SettingsViewModel @Inject constructor(
         observeDefaultTab()
         observeAutoforwardTasks()
         observeTaskListSections()
+        observePastTasksUndoneOnly()
         observeDailyReminder()
         checkExactAlarmPermission()
     }
@@ -153,6 +154,20 @@ class SettingsViewModel @Inject constructor(
     fun setDefaultTab(defaultTab: DefaultTab) {
         viewModelScope.launch {
             settingsRepository.setDefaultTab(defaultTab)
+        }
+    }
+
+    private fun observePastTasksUndoneOnly() {
+        viewModelScope.launch {
+            settingsRepository.observePastTasksUndoneOnlyEnabled().collectLatest { enabled ->
+                setState { copy(pastTasksUndoneOnlyEnabled = enabled) }
+            }
+        }
+    }
+
+    fun setPastTasksUndoneOnlyEnabled(isEnabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setPastTasksUndoneOnlyEnabled(isEnabled)
         }
     }
 

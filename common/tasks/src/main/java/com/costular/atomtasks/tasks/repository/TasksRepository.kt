@@ -21,6 +21,7 @@ interface TasksRepository {
     suspend fun getTaskCount(): Int
     fun getTaskById(id: Long): Flow<Task?>
     fun getTasks(day: LocalDate? = null): Flow<List<Task>>
+    fun observeCompletedTasks(): Flow<List<Task>>
     fun observeTasksInRange(startDate: LocalDate, endDate: LocalDate): Flow<List<Task>>
     fun observeSearchTasks(query: String): Flow<List<Task>>
     suspend fun removeTask(taskId: Long, recurringRemovalStrategy: RecurringRemovalStrategy?)

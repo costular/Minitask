@@ -18,6 +18,7 @@ interface TaskLocalDataSource {
     )
     suspend fun getTasksCount(): Int
     fun getTasks(day: LocalDate? = null): Flow<List<TaskAggregated>>
+    fun observeCompletedTasks(): Flow<List<TaskAggregated>>
     fun observeTasksInRange(startDate: LocalDate, endDate: LocalDate): Flow<List<TaskAggregated>>
     fun observeSearchTasks(query: String): Flow<List<TaskAggregated>>
     fun getTaskById(id: Long): Flow<TaskAggregated?>

@@ -44,6 +44,38 @@ class TaskDatabaseTest {
     }
 
     @Test
+    fun completedTasksIncludeAllDatesAndOrderByDayPositionAndId() = runTest {
+        val day = LocalDate.of(2026, 10, 5)
+        val template = TaskEntity(0, day, "Completed", day, isDone = true)
+        tasksDao.addTask(template.copy(id = 1, day = day.minusYears(2)))
+        tasksDao.addTask(template.copy(id = 2, day = day.plusYears(2)))
+        tasksDao.addTask(template.copy(id = 3, position = 2))
+        tasksDao.addTask(template.copy(id = 4, position = 0))
+        tasksDao.addTask(template.copy(id = 5, position = 1))
+        tasksDao.addTask(template.copy(id = 6, position = 3, isDone = false))
+        val result = tasksDao.observeCompletedTasks().first()
+        assertThat(result.map { it.task.id }).containsExactly(2L, 4L, 5L, 3L, 1L).inOrder()
+    }
+
+    @Test
+    fun completedTaskObservationUpdatesAfterCompletionUndoAndDeletion() = runTest {
+        val day = LocalDate.of(2026, 10, 5)
+        val id = tasksDao.createTask(TaskEntity(0, day, "Task", day))
+        tasksDao.observeCompletedTasks().test {
+            assertThat(awaitItem()).isEmpty()
+            tasksDao.updateTaskDone(id, true)
+            assertThat(awaitItem().single().task.id).isEqualTo(id)
+            tasksDao.updateTaskDone(id, false)
+            assertThat(awaitItem()).isEmpty()
+            tasksDao.updateTaskDone(id, true)
+            assertThat(awaitItem()).hasSize(1)
+            tasksDao.removeTaskById(id)
+            assertThat(awaitItem()).isEmpty()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun rangeIncludesBothBoundariesAndOrdersTasksByDateThenPosition() = runTest {
         val start = LocalDate.of(2026, 10, 3)
         val end = start.plusDays(1)

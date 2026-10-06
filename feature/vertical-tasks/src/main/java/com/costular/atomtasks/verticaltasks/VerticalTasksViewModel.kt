@@ -7,6 +7,7 @@ import com.costular.atomtasks.core.ui.R
 import com.costular.atomtasks.core.ui.SnackbarManager
 import com.costular.atomtasks.core.ui.mvi.MviViewModel
 import com.costular.atomtasks.core.ui.tasks.TaskInteractionStateHolder
+import com.costular.atomtasks.data.settings.SettingsRepository
 import com.costular.atomtasks.tasks.removal.RecurringRemovalStrategy
 import com.costular.atomtasks.tasks.model.Task
 import com.costular.atomtasks.tasks.usecase.MoveTaskUseCase
@@ -19,6 +20,7 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -37,6 +39,7 @@ private fun initialState(savedState: SavedStateHandle, clock: Clock): VerticalTa
 @HiltViewModel
 class VerticalTasksViewModel @Inject constructor(
     private val observeTasks: ObserveTasksInRangeUseCase,
+    private val settingsRepository: SettingsRepository,
     private val moveTask: MoveTaskUseCase,
     private val savedState: SavedStateHandle,
     private val clock: Clock,
@@ -69,8 +72,11 @@ class VerticalTasksViewModel @Inject constructor(
             ranges.flatMapLatest { request ->
                 observeTasks(ObserveTasksInRangeUseCase.Params(request.window.start, request.window.end))
                     .map { request to it }
-            }.collect { (request, result) ->
+            }.combine(settingsRepository.observePastTasksUndoneOnlyEnabled()) { observation, undoneOnly ->
+                Triple(observation.first, observation.second, undoneOnly)
+            }.collect { (request, result, undoneOnly) ->
                 if (request == ranges.value) {
+                    setState { copy(pastTasksUndoneOnlyEnabled = undoneOnly) }
                     result.fold(
                         ifError = { setState { copy(isLoading = false, hasError = true) } },
                         ifResult = { tasks ->
@@ -81,6 +87,7 @@ class VerticalTasksViewModel @Inject constructor(
                                     setState {
                                         copy(rows = rows, window = request.window, isLoading = false, hasError = false)
                                     }
+                                    resolveEmptyPastTarget()
                                 }
                             }
                         },
@@ -110,11 +117,26 @@ class VerticalTasksViewModel @Inject constructor(
         if (current.isLoading || current.hasError) return
         val window = ranges.value.window
         val next = when {
-            firstDay <= window.start.plusDays(DateWindow.PrefetchDays) -> window.extendPast()
-            lastDay >= window.end.minusDays(DateWindow.PrefetchDays) -> window.extendFuture()
+            window.start > today && firstDay <= window.start.plusDays(DateWindow.PrefetchDays) -> window.extendPast()
+            lastDay >= today && lastDay >= window.end.minusDays(DateWindow.PrefetchDays) -> window.extendFuture()
             else -> window
         }
         if (next != window) requestWindow(next)
+    }
+
+    fun loadOlderTasks() {
+        val current = state.value
+        if (current.isDragging || current.scrollTarget != null) return
+        if (current.isLoading || current.hasError) return
+        requestWindow(ranges.value.window.extendPast())
+    }
+
+    private fun resolveEmptyPastTarget() {
+        val current = state.value
+        val target = current.scrollTarget ?: return
+        if (target.day >= today) return
+        val hasPastTasks = current.rows.filterIsInstance<VerticalTaskRow.Item>().any { it.day < today }
+        if (!hasPastTasks) selectToday()
     }
 
     fun selectDay(day: LocalDate) {
@@ -122,6 +144,7 @@ class VerticalTasksViewModel @Inject constructor(
         val target = ScrollTarget(day, requestId = ++scrollRequestId)
         setState { copy(selectedDay = day, shouldShowCalendar = false, scrollTarget = target) }
         if (!ranges.value.window.contains(day)) requestWindow(DateWindow.around(day))
+        else if (!state.value.isLoading) resolveEmptyPastTarget()
     }
 
     fun selectToday() = selectDay(LocalDate.now(clock))
@@ -193,15 +216,10 @@ class VerticalTasksViewModel @Inject constructor(
         }
     }
 
-    private fun buildRows(window: DateWindow, tasks: List<Task>) = buildList {
-        val grouped = tasks.groupBy { it.day }
-        var day = window.start
-        while (day <= window.end) {
-            add(VerticalTaskRow.Header(day))
-            val dailyTasks = grouped[day].orEmpty()
-            if (dailyTasks.isEmpty()) add(VerticalTaskRow.Empty(day))
-            else dailyTasks.forEach { add(VerticalTaskRow.Item(it)) }
-            day = day.plusDays(1)
-        }
-    }.toImmutableList()
+    private fun buildRows(window: DateWindow, tasks: List<Task>) = buildVerticalTaskRows(
+        window = window,
+        tasks = tasks,
+        today = today,
+        undoneOnly = state.value.pastTasksUndoneOnlyEnabled,
+    )
 }

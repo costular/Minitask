@@ -24,6 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.ArrowUpward
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.TaskAlt
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -93,6 +94,8 @@ fun VerticalTasksScreen(
         state = state,
         onToday = viewModel::selectToday,
         onSearch = navigator::navigateToSearch,
+        onCompletedTasks = navigator::navigateToCompletedTasks,
+        onLoadOlder = viewModel::loadOlderTasks,
         onCalendar = viewModel::openCalendar,
         onDismissCalendar = viewModel::dismissCalendar,
         onSelectDay = viewModel::selectDay,
@@ -114,10 +117,15 @@ fun VerticalTasksScreen(
 private data class VisibleAnchor(val key: Any, val offset: Int, val lastKey: Any, val pendingScrollId: Long?)
 private data class ScrollPosition(val index: Int, val offset: Int)
 
-private fun resolveScrollPosition(rows: List<VerticalTaskRow>, target: ScrollTarget): ScrollPosition? {
+private fun resolveScrollPosition(
+    rows: List<VerticalTaskRow>,
+    target: ScrollTarget,
+    today: LocalDate,
+): ScrollPosition? {
     val taskIndex = rows.indexOfFirst { target.taskId != null && it.key == target.taskId }
     val index = if (taskIndex >= 0) taskIndex else rows.indexOfFirst {
-        it is VerticalTaskRow.Header && it.day == target.day
+        if (target.day < today) it is VerticalTaskRow.PastHeader
+        else it is VerticalTaskRow.Header && it.day == target.day
     }
     if (index < 0) return null
     val offset = if (target.taskId != null && taskIndex < 0) 0 else target.offset
@@ -131,7 +139,9 @@ fun VerticalTasksScreen(
     state: VerticalTasksState,
     onToday: () -> Unit,
     onSearch: () -> Unit,
+    onCompletedTasks: () -> Unit,
     onCalendar: () -> Unit,
+    onLoadOlder: () -> Unit,
     onDismissCalendar: () -> Unit,
     onSelectDay: (LocalDate) -> Unit,
     onScrollHandled: (Long) -> Unit,
@@ -149,13 +159,13 @@ fun VerticalTasksScreen(
     today: LocalDate = LocalDate.now(),
 ) {
     val listState = rememberLazyListState()
-    VerticalTasksScrollEffects(state, listState, onAnchor, onVisibleRange, onScrollHandled)
+    VerticalTasksScrollEffects(state, listState, today, onAnchor, onVisibleRange, onScrollHandled)
 
     if (state.shouldShowCalendar) {
         DatePickerDialog(onDismissCalendar, state.selectedDay, onSelectDay)
     }
     Column(modifier = modifier) {
-        VerticalTasksHeader(onCalendar, onSearch, Modifier.fillMaxWidth())
+        VerticalTasksHeader(onCalendar, onSearch, onCompletedTasks, Modifier.fillMaxWidth())
         if (state.hasError) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(stringResource(R.string.tasks_load_error), modifier = Modifier.weight(1f))
@@ -171,6 +181,7 @@ fun VerticalTasksScreen(
                 VerticalTasksList(
                     state = state,
                     listState = listState,
+                    onLoadOlder = onLoadOlder,
                     onOpenTask = onOpenTask,
                     onMore = onMore,
                     onDelete = onDelete,
@@ -184,6 +195,7 @@ fun VerticalTasksScreen(
                     rows = state.rows,
                     listState = listState,
                     today = today,
+                    isTodayOutsideWindow = !state.window.contains(today),
                     enabled = state.scrollTarget == null && !state.isDragging,
                     onToday = onToday,
                     modifier = Modifier
@@ -199,6 +211,7 @@ fun VerticalTasksScreen(
 private fun VerticalTasksHeader(
     onCalendar: () -> Unit,
     onSearch: () -> Unit,
+    onCompletedTasks: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Surface(modifier) {
@@ -212,6 +225,9 @@ private fun VerticalTasksHeader(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.End,
             ) {
+                IconButton(onClick = onCompletedTasks) {
+                    Icon(Icons.Outlined.TaskAlt, stringResource(R.string.completed_tasks))
+                }
                 IconButton(onClick = onSearch) { Icon(Icons.Outlined.Search, stringResource(R.string.search_tasks)) }
                 IconButton(onClick = onCalendar) {
                     Icon(Icons.Outlined.CalendarMonth, stringResource(R.string.home_menu_calendar))
@@ -227,6 +243,7 @@ private fun TodayBubble(
     listState: LazyListState,
     today: LocalDate,
     enabled: Boolean,
+    isTodayOutsideWindow: Boolean,
     onToday: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -238,7 +255,7 @@ private fun TodayBubble(
         }
     }
     AnimatedVisibility(
-        visible = enabled && isPastTodayHeader,
+        visible = enabled && (isPastTodayHeader || isTodayOutsideWindow),
         modifier = modifier,
         enter = fadeIn() + slideInVertically { -it / 2 },
         exit = fadeOut() + slideOutVertically { -it / 2 },
@@ -269,6 +286,7 @@ private const val FabPadding = 90
 private fun VerticalTasksScrollEffects(
     state: VerticalTasksState,
     listState: LazyListState,
+    today: LocalDate,
     onAnchor: (LocalDate, Long?, Int) -> Unit,
     onVisibleRange: (LocalDate, LocalDate) -> Unit,
     onScrollHandled: (Long) -> Unit,
@@ -298,10 +316,10 @@ private fun VerticalTasksScrollEffects(
             }
         }
     }
-    LaunchedEffect(state.scrollTarget, state.isLoading) {
+    LaunchedEffect(state.scrollTarget, state.isLoading, state.hasError, state.rows, today) {
         val target = state.scrollTarget
         if (target != null && !state.isLoading && !state.hasError) {
-            val position = resolveScrollPosition(state.rows, target)
+            val position = resolveScrollPosition(state.rows, target, today)
             if (position != null) {
                 listState.scrollToItem(position.index, position.offset)
                 onScrollHandled(target.requestId)
@@ -317,6 +335,7 @@ private fun VerticalTasksScrollEffects(
 private fun VerticalTasksList(
     state: VerticalTasksState,
     listState: LazyListState,
+    onLoadOlder: () -> Unit,
     onOpenTask: (Task) -> Unit,
     onMore: (Task) -> Unit,
     onDelete: (Task) -> Unit,
@@ -332,9 +351,7 @@ private fun VerticalTasksList(
         val fromId = from.key as? Long
         val toId = to.key as? Long
         if (fromId != null && toId != null) {
-            val source = latestRows.find { it.key == fromId }
-            val target = latestRows.find { it.key == toId }
-            if (source != null && source.day == target?.day) latestMove(fromId, toId)
+            moveTasksInSameDay(latestRows, fromId, toId, latestMove)
         }
     }
 
@@ -345,16 +362,27 @@ private fun VerticalTasksList(
     ) {
         state.rows.forEach { row ->
             when (row) {
+                is VerticalTaskRow.PastHeader -> stickyHeader(key = row.key) {
+                    PastTasksHeader(modifier = Modifier.fillMaxWidth())
+                }
+                is VerticalTaskRow.LoadOlder -> item(key = row.key) {
+                    LoadOlderTasksButton(
+                        onClick = onLoadOlder,
+                        enabled = !state.isLoading && !state.hasError &&
+                            !state.isDragging && state.scrollTarget == null,
+                        modifier = Modifier.padding(horizontal = AppTheme.dimens.contentMargin),
+                    )
+                }
                 is VerticalTaskRow.Header -> stickyHeader(key = row.key) {
                     TaskDayHeader(day = row.day, modifier = Modifier.fillMaxWidth())
                 }
                 is VerticalTaskRow.Empty -> item(key = row.key) {
-                    Text(stringResource(R.string.vertical_empty_day),
+                    EmptyDayRow(
                         modifier = Modifier.padding(
                             horizontal = AppTheme.dimens.contentMargin,
                             vertical = AppTheme.dimens.spacingSmall,
                         ),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    )
                 }
                 is VerticalTaskRow.Item -> item(key = row.key) {
                     ReorderableTaskRow(
@@ -375,4 +403,15 @@ private fun VerticalTasksList(
             }
         }
     }
+}
+
+private fun moveTasksInSameDay(
+    rows: List<VerticalTaskRow>,
+    fromId: Long,
+    toId: Long,
+    onMove: (Long, Long) -> Unit,
+) {
+    val source = rows.find { it.key == fromId }
+    val target = rows.find { it.key == toId }
+    if (source != null && source.day == target?.day) onMove(fromId, toId)
 }

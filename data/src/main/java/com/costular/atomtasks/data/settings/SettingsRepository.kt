@@ -9,6 +9,9 @@ interface SettingsRepository {
     fun observeDefaultTab(): Flow<DefaultTab>
     suspend fun setDefaultTab(defaultTab: DefaultTab)
 
+    fun observePastTasksUndoneOnlyEnabled(): Flow<Boolean>
+    suspend fun setPastTasksUndoneOnlyEnabled(isEnabled: Boolean)
+
     fun observeTaskListSectionsEnabled(): Flow<Boolean>
     suspend fun setTaskListSectionsEnabled(isEnabled: Boolean)
 

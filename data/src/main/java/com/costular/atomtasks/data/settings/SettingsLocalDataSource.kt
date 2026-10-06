@@ -9,6 +9,9 @@ interface SettingsLocalDataSource {
     fun observeDefaultTab(): Flow<String>
     suspend fun setDefaultTab(defaultTab: String)
 
+    fun observePastTasksUndoneOnlyEnabled(): Flow<Boolean>
+    suspend fun setPastTasksUndoneOnlyEnabled(isEnabled: Boolean)
+
     fun observeTaskListSectionsEnabled(): Flow<Boolean>
     suspend fun setTaskListSectionsEnabled(isEnabled: Boolean)
 

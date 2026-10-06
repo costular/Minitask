@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.14.0] - 2026-10-05
 
 ### Added
+- View all completed tasks grouped by day from the vertical timeline.
+- Filter the Past section to show only unfinished tasks from Settings.
 - Expand the Agenda header to browse a compact monthly calendar and select a day.
 - Choose Agenda or Vertical as the default home screen when opening the app.
 - Group completed tasks in a collapsible section.
@@ -28,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Browse tasks by day in a vertical timeline with sticky headers, a dedicated navigation tab, and a floating Today shortcut when scrolling past today.
 
 ### Changed
+- Group past dates under one Past header, with newest dates first and explicit older-history loading.
 
 ### Deprecated
 

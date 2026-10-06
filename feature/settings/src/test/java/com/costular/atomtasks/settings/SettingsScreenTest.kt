@@ -7,6 +7,7 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isSelectable
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import com.costular.atomtasks.core.testing.ui.getString
 import com.costular.atomtasks.core.ui.R
 import com.costular.atomtasks.data.settings.DefaultTab
@@ -30,6 +31,7 @@ class SettingsScreenTest : ComposeProvider {
 
     private val onUpdateAutoforwardTasks: (Boolean) -> Unit = mockk(relaxed = true)
     private val onUpdateTaskListSections: (Boolean) -> Unit = mockk(relaxed = true)
+    private val onUpdatePastTasksUndoneOnly: (Boolean) -> Unit = mockk(relaxed = true)
     private val onUpdateDefaultTab: (DefaultTab) -> Unit = mockk(relaxed = true)
 
     @Before
@@ -150,6 +152,22 @@ class SettingsScreenTest : ComposeProvider {
             .assertDoesNotExist()
     }
 
+    @Test
+    fun `should enable past filtering when its disabled row is clicked`() {
+        givenSettingsScreen(SettingsState(pastTasksUndoneOnlyEnabled = false))
+        composeTestRule.onNodeWithText(composeTestRule.getString(R.string.settings_past_tasks_undone_only_title))
+            .performScrollTo().performClick()
+        verify(exactly = 1) { onUpdatePastTasksUndoneOnly(true) }
+    }
+
+    @Test
+    fun `should disable past filtering when its enabled row is clicked`() {
+        givenSettingsScreen(SettingsState(pastTasksUndoneOnlyEnabled = true))
+        composeTestRule.onNodeWithText(composeTestRule.getString(R.string.settings_past_tasks_undone_only_title))
+            .performScrollTo().performClick()
+        verify(exactly = 1) { onUpdatePastTasksUndoneOnly(false) }
+    }
+
     private fun openDefaultTabSelector() {
         composeTestRule.onNodeWithText(composeTestRule.getString(R.string.settings_default_tab_title))
             .performClick()
@@ -167,6 +185,7 @@ class SettingsScreenTest : ComposeProvider {
                 onUpdateDefaultTab = onUpdateDefaultTab,
                 onUpdateAutoforwardTasks = onUpdateAutoforwardTasks,
                 onUpdateTaskListSections = onUpdateTaskListSections,
+                onUpdatePastTasksUndoneOnly = onUpdatePastTasksUndoneOnly,
                 onEnableDailyReminder = {},
                 onClickDailyReminder = {},
                 onBackupLocal = {},

@@ -38,6 +38,7 @@ class SettingsViewModelTest : MviViewModelTest() {
     private val getThemeUseCase: GetThemeUseCase = mockk(relaxed = true)
     private val setThemeUseCase: SetThemeUseCase = mockk(relaxed = true)
     private val settingsRepository: SettingsRepository = mockk(relaxUnitFun = true)
+    private val pastTasksUndoneOnlyEnabled = MutableStateFlow(false)
     private val taskListSectionsEnabled = MutableStateFlow(false)
     private val defaultTab = MutableStateFlow(DefaultTab.Agenda)
     private val isAutoforwardTasksInteractor: IsAutoforwardTasksSettingEnabledUseCase =
@@ -61,6 +62,7 @@ class SettingsViewModelTest : MviViewModelTest() {
     private fun initialize() {
         coEvery { areExactRemindersAvailable(Unit) } returns true
         coEvery { settingsRepository.observeTaskListSectionsEnabled() } returns taskListSectionsEnabled
+        coEvery { settingsRepository.observePastTasksUndoneOnlyEnabled() } returns pastTasksUndoneOnlyEnabled
         coEvery { settingsRepository.observeDefaultTab() } returns defaultTab
         sut = SettingsViewModel(
             getThemeUseCase = getThemeUseCase,
@@ -78,6 +80,15 @@ class SettingsViewModelTest : MviViewModelTest() {
             snackbarManager = snackbarManager,
             context = context,
         )
+    }
+
+    @Test
+    fun `should observe and save the past unfinished-only setting`() = runTest {
+        assertThat(sut.state.value.pastTasksUndoneOnlyEnabled).isFalse()
+        pastTasksUndoneOnlyEnabled.value = true
+        assertThat(sut.state.value.pastTasksUndoneOnlyEnabled).isTrue()
+        sut.setPastTasksUndoneOnlyEnabled(false)
+        coVerify(exactly = 1) { settingsRepository.setPastTasksUndoneOnlyEnabled(false) }
     }
 
     @Test

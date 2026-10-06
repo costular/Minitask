@@ -107,6 +107,7 @@ fun SettingsScreen(
         onUpdateDefaultTab = viewModel::setDefaultTab,
         onUpdateAutoforwardTasks = viewModel::setAutoforwardTasksEnabled,
         onUpdateTaskListSections = viewModel::setTaskListSectionsEnabled,
+        onUpdatePastTasksUndoneOnly = viewModel::setPastTasksUndoneOnlyEnabled,
         onEnableDailyReminder = viewModel::updateDailyReminder,
         onClickDailyReminder = viewModel::clickOnDailyReminderTimePicker,
         onBackupLocal = { createDocumentLauncher.launch(DefaultBackupFilename) },
@@ -116,6 +117,7 @@ fun SettingsScreen(
 
 @Composable
 @VisibleForTesting
+@Suppress("LongParameterList")
 @OptIn(ExperimentalMaterial3Api::class)
 fun SettingsScreen(
     state: SettingsState,
@@ -123,6 +125,7 @@ fun SettingsScreen(
     onUpdateDefaultTab: (DefaultTab) -> Unit,
     onUpdateAutoforwardTasks: (Boolean) -> Unit,
     onUpdateTaskListSections: (Boolean) -> Unit,
+    onUpdatePastTasksUndoneOnly: (Boolean) -> Unit,
     onEnableDailyReminder: (Boolean) -> Unit,
     onClickDailyReminder: () -> Unit,
     onBackupLocal: () -> Unit,
@@ -169,6 +172,7 @@ fun SettingsScreen(
             onSelectDefaultTab = { isDefaultTabSelectorOpen = true },
             onUpdateAutoforwardTasks = onUpdateAutoforwardTasks,
             onUpdateTaskListSections = onUpdateTaskListSections,
+            onUpdatePastTasksUndoneOnly = onUpdatePastTasksUndoneOnly,
             onEnableDailyReminder = onEnableDailyReminder,
             onClickDailyReminder = onClickDailyReminder,
             onBackupLocal = onBackupLocal,
@@ -187,6 +191,7 @@ private fun SettingsContent(
     onSelectDefaultTab: () -> Unit,
     onUpdateAutoforwardTasks: (Boolean) -> Unit,
     onUpdateTaskListSections: (Boolean) -> Unit,
+    onUpdatePastTasksUndoneOnly: (Boolean) -> Unit,
     onEnableDailyReminder: (Boolean) -> Unit,
     onClickDailyReminder: () -> Unit,
     onBackupLocal: () -> Unit,
@@ -215,6 +220,8 @@ private fun SettingsContent(
         TasksSettingsSection(
             isMoveUndoneTasksTomorrowEnabled = state.moveUndoneTasksTomorrowAutomatically,
             isTaskListSectionsEnabled = state.taskListSectionsEnabled,
+            isPastTasksUndoneOnlyEnabled = state.pastTasksUndoneOnlyEnabled,
+            onSetPastTasksUndoneOnly = onUpdatePastTasksUndoneOnly,
             onSetTaskListSections = onUpdateTaskListSections,
             onSetMoveUndoneTasksTomorrow = onUpdateAutoforwardTasks,
             dailyReminder = state.dailyReminder,
@@ -266,6 +273,7 @@ private fun SettingsScreenPreview() {
             onUpdateDefaultTab = {},
             onUpdateAutoforwardTasks = {},
             onUpdateTaskListSections = {},
+            onUpdatePastTasksUndoneOnly = {},
             onEnableDailyReminder = {},
             onClickDailyReminder = {},
             onBackupLocal = {},

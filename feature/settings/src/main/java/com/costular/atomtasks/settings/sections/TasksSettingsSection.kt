@@ -32,6 +32,8 @@ fun TasksSettingsSection(
     isMoveUndoneTasksTomorrowEnabled: Boolean,
     dailyReminder: DailyReminder?,
     isTaskListSectionsEnabled: Boolean,
+    isPastTasksUndoneOnlyEnabled: Boolean,
+    onSetPastTasksUndoneOnly: (Boolean) -> Unit,
     onSetTaskListSections: (Boolean) -> Unit,
     onEnableDailyReminder: (Boolean) -> Unit,
     onClickDailyReminder: () -> Unit,
@@ -67,6 +69,14 @@ fun TasksSettingsSection(
         TaskListSectionsItem(
             isEnabled = isTaskListSectionsEnabled,
             onSetTaskListSections = onSetTaskListSections,
+        )
+
+        SettingDivider()
+
+        PastTasksUndoneOnlyItem(
+            isEnabled = isPastTasksUndoneOnlyEnabled,
+            onSetPastTasksUndoneOnly = onSetPastTasksUndoneOnly,
+            modifier = Modifier.fillMaxWidth(),
         )
     }
 }
@@ -168,6 +178,32 @@ private fun TaskListSectionsItem(
     )
 }
 
+@Composable
+private fun PastTasksUndoneOnlyItem(
+    isEnabled: Boolean,
+    onSetPastTasksUndoneOnly: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    SettingSwitch(
+        title = {
+            Column {
+                Text(
+                    text = stringResource(R.string.settings_past_tasks_undone_only_title),
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = stringResource(R.string.settings_past_tasks_undone_only_description),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
+        },
+        isSelected = isEnabled,
+        onSelect = onSetPastTasksUndoneOnly,
+        modifier = modifier,
+    )
+}
+
 @Preview
 @Composable
 fun TasksSettingsSectionPreview() {
@@ -176,6 +212,8 @@ fun TasksSettingsSectionPreview() {
             dailyReminder = DailyReminder(true, LocalTime.of(8, 0)),
             isMoveUndoneTasksTomorrowEnabled = true,
             isTaskListSectionsEnabled = true,
+            isPastTasksUndoneOnlyEnabled = false,
+            onSetPastTasksUndoneOnly = {},
             onSetTaskListSections = {},
             onSetMoveUndoneTasksTomorrow = {},
             onClickDailyReminder = {},

@@ -43,3 +43,4 @@ include(":core:locale")
 
 include(":feature:search")
 include(":feature:vertical-tasks")
+include(":feature:completed-tasks")

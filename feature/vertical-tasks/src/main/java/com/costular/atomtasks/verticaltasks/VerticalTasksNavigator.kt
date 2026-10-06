@@ -1,6 +1,7 @@
 package com.costular.atomtasks.verticaltasks
 
 interface VerticalTasksNavigator {
+    fun navigateToCompletedTasks()
     fun navigateToSearch()
     fun navigateToDetailScreenForCreateTask(date: String)
     fun navigateToDetailScreenToEdit(taskId: Long)

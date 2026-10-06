@@ -19,6 +19,13 @@ class SettingsRepositoryImpl @Inject constructor(
         settingsLocalDataSource.setDefaultTab(defaultTab.preferenceValue)
     }
 
+    override fun observePastTasksUndoneOnlyEnabled(): Flow<Boolean> =
+        settingsLocalDataSource.observePastTasksUndoneOnlyEnabled()
+
+    override suspend fun setPastTasksUndoneOnlyEnabled(isEnabled: Boolean) {
+        settingsLocalDataSource.setPastTasksUndoneOnlyEnabled(isEnabled)
+    }
+
     override fun observeTaskListSectionsEnabled(): Flow<Boolean> =
         settingsLocalDataSource.observeTaskListSectionsEnabled()
 

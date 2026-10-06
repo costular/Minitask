@@ -38,6 +38,7 @@ import com.costular.designsystem.theme.AtomTheme
 import com.google.common.truth.Truth.assertThat
 import com.ramcosta.composedestinations.generated.detail.destinations.TaskDetailScreenDestination
 import com.ramcosta.composedestinations.generated.search.destinations.SearchScreenDestination
+import com.ramcosta.composedestinations.generated.completedtasks.destinations.CompletedTasksScreenDestination
 import com.ramcosta.composedestinations.rememberNavHostEngine
 import dagger.hilt.android.testing.BindValue
 import dagger.hilt.android.testing.HiltAndroidRule
@@ -306,7 +307,7 @@ class TaskNavigationTest {
     fun givenScrolledVerticalListWhenTabIsReopenedThenPinnedDateIsRestored() {
         showHome()
         selectTab(HomeNavigationDestination.VerticalTasks)
-        composeTestRule.onNode(hasScrollToIndexAction()).performScrollToIndex(80)
+        composeTestRule.onNode(hasScrollToIndexAction()).performScrollToIndex(40)
         val expectedDay = selectedVerticalDay()
 
         selectTab(HomeNavigationDestination.Agenda)
@@ -319,7 +320,7 @@ class TaskNavigationTest {
     fun givenScrolledVerticalListWhenCreateIsClickedThenPinnedDateIsUsed() {
         showHome()
         selectTab(HomeNavigationDestination.VerticalTasks)
-        composeTestRule.onNode(hasScrollToIndexAction()).performScrollToIndex(80)
+        composeTestRule.onNode(hasScrollToIndexAction()).performScrollToIndex(40)
         val expectedDay = selectedVerticalDay()
 
         composeTestRule.onNodeWithTag(CreateTaskFabTag).performClick()
@@ -328,6 +329,43 @@ class TaskNavigationTest {
             val args = TaskDetailScreenDestination.argsFrom(appState.navController.currentBackStackEntry?.arguments)
             assertThat(args.defaultDate).isEqualTo(expectedDay)
         }
+    }
+
+    @Test
+    fun givenCompletedTasksActionWhenOpenedThenOnlyCompletedTasksAppear() = runTest {
+        val completedName = "Completed navigation task"
+        val unfinishedName = "Unfinished navigation task"
+        createTask(completedName)
+        tasks.markTask(createdTaskIds.last(), true)
+        createTask(unfinishedName)
+        showHome(DefaultTab.VerticalTasks)
+        composeTestRule.onNodeWithContentDescription(composeTestRule.getString(R.string.completed_tasks)).performClick()
+        composeTestRule.waitUntil(10_000) {
+            composeTestRule.onAllNodesWithText(completedName).fetchSemanticsNodes().isNotEmpty()
+        }
+        composeTestRule.onNodeWithText(completedName).assertIsDisplayed()
+        composeTestRule.onNodeWithText(unfinishedName).assertDoesNotExist()
+        composeTestRule.onNodeWithTag(CreateTaskFabTag).assertDoesNotExist()
+        composeTestRule.runOnIdle {
+            assertThat(currentRoute()).isEqualTo(CompletedTasksScreenDestination.route)
+        }
+        composeTestRule.onNodeWithTag("Markable", useUnmergedTree = true).performClick()
+        composeTestRule.waitUntil(10_000) {
+            composeTestRule.onAllNodesWithText(completedName).fetchSemanticsNodes().isEmpty()
+        }
+    }
+
+    @Test
+    fun givenScrolledVerticalListWhenReturningFromCompletedTasksThenAnchorIsRestored() {
+        showHome(DefaultTab.VerticalTasks)
+        composeTestRule.onNode(hasScrollToIndexAction()).performScrollToIndex(40)
+        val expectedDay = selectedVerticalDay()
+        composeTestRule.onNodeWithContentDescription(composeTestRule.getString(R.string.completed_tasks)).performClick()
+        composeTestRule.onNodeWithContentDescription(composeTestRule.getString(R.string.navigate_back)).performClick()
+        composeTestRule.runOnIdle {
+            assertThat(currentRoute()).isEqualTo(HomeNavigationDestination.VerticalTasks.screen.route)
+        }
+        assertThat(selectedVerticalDay()).isEqualTo(expectedDay)
     }
 
     @Before

@@ -1,6 +1,8 @@
 package com.costular.atomtasks.ui.home
 
 import androidx.navigation.NavController
+import com.costular.atomtasks.completedtasks.CompletedTasksNavigator
+import com.ramcosta.composedestinations.generated.completedtasks.destinations.CompletedTasksScreenDestination
 import com.costular.atomtasks.agenda.ui.AgendaNavigator
 import com.costular.atomtasks.search.SearchNavigator
 import com.costular.atomtasks.verticaltasks.VerticalTasksNavigator
@@ -17,7 +19,12 @@ import java.time.LocalDate
 
 class AppNavigator(
     private val navController: NavController,
-) : SettingsNavigator, AgendaNavigator, OnboardingNavigator, SearchNavigator, VerticalTasksNavigator {
+) : SettingsNavigator,
+    AgendaNavigator,
+    OnboardingNavigator,
+    SearchNavigator,
+    VerticalTasksNavigator,
+    CompletedTasksNavigator {
 
     private val destinationsNavigator by lazy {
         navController.toDestinationsNavigator()
@@ -43,6 +50,10 @@ class AppNavigator(
 
     override fun openTaskActions(taskId: Long, taskName: String, isDone: Boolean) {
         destinationsNavigator.navigate(TasksActionsBottomSheetDestination(taskId, taskName, isDone))
+    }
+
+    override fun navigateToCompletedTasks() {
+        destinationsNavigator.navigate(CompletedTasksScreenDestination) { launchSingleTop = true }
     }
 
     override fun navigateToSearch() {

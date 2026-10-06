@@ -3,6 +3,7 @@ package com.costular.atomtasks.verticaltasks
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.costular.atomtasks.core.testing.MainCoroutineRule
+import com.costular.atomtasks.data.settings.SettingsRepository
 import com.costular.atomtasks.core.ui.AppSnackbarMessage
 import com.costular.atomtasks.core.ui.R
 import com.costular.atomtasks.core.ui.SnackbarManager
@@ -53,6 +54,10 @@ class VerticalTasksViewModelTest {
     private val repository = mockk<TasksRepository>()
     private val move = mockk<MoveTaskUseCase>(relaxUnitFun = true)
     private val snackbar = mockk<SnackbarManager>(relaxUnitFun = true)
+    private val undoneOnly = MutableStateFlow(false)
+    private val settings = mockk<SettingsRepository> {
+        every { observePastTasksUndoneOnlyEnabled() } returns undoneOnly
+    }
     private val tasks = MutableStateFlow<List<Task>>(emptyList())
 
     @Test
@@ -72,27 +77,27 @@ class VerticalTasksViewModelTest {
     }
 
     @Test
-    fun `given an empty task list when the screen starts then all 61 days have headers`() = runTest(main.testDispatcher) {
+    fun `given an empty task list when the screen starts then all 31 current and future days have headers`() = runTest(main.testDispatcher) {
         val viewModel = viewModel()
         runCurrent()
 
-        assertThat(viewModel.state.value.rows.filterIsInstance<VerticalTaskRow.Header>()).hasSize(61)
+        assertThat(viewModel.state.value.rows.filterIsInstance<VerticalTaskRow.Header>()).hasSize(31)
     }
 
     @Test
-    fun `given an empty task list when the screen starts then all 61 days have empty rows`() = runTest(main.testDispatcher) {
+    fun `given an empty task list when the screen starts then all 31 current and future days have empty rows`() = runTest(main.testDispatcher) {
         val viewModel = viewModel()
         runCurrent()
 
-        assertThat(viewModel.state.value.rows.filterIsInstance<VerticalTaskRow.Empty>()).hasSize(61)
+        assertThat(viewModel.state.value.rows.filterIsInstance<VerticalTaskRow.Empty>()).hasSize(31)
     }
 
     @Test
-    fun `given an empty task list when the screen starts then rows start 30 days before today`() = runTest(main.testDispatcher) {
+    fun `given an empty task list when the screen starts then the first row is the shared Past header`() = runTest(main.testDispatcher) {
         val viewModel = viewModel()
         runCurrent()
 
-        assertThat(viewModel.state.value.rows.first().day).isEqualTo(today.minusDays(30))
+        assertThat(viewModel.state.value.rows.first()).isEqualTo(VerticalTaskRow.PastHeader(today.minusDays(1)))
     }
 
     @Test
@@ -130,7 +135,7 @@ class VerticalTasksViewModelTest {
 
         repeat(4) {
             val window = viewModel.state.value.window
-            viewModel.onVisibleRange(window.start, window.start.plusDays(1))
+            viewModel.loadOlderTasks()
             runCurrent()
         }
 
@@ -144,7 +149,7 @@ class VerticalTasksViewModelTest {
 
         repeat(4) {
             val window = viewModel.state.value.window
-            viewModel.onVisibleRange(window.start, window.start.plusDays(1))
+            viewModel.loadOlderTasks()
             runCurrent()
         }
 
@@ -354,7 +359,7 @@ class VerticalTasksViewModelTest {
         val window = viewModel.state.value.window
         viewModel.onMove(1, 2)
 
-        viewModel.onVisibleRange(window.start, window.start)
+        viewModel.loadOlderTasks()
         runCurrent()
 
         assertThat(viewModel.state.value.window).isEqualTo(window)
@@ -427,7 +432,7 @@ class VerticalTasksViewModelTest {
         tasks.value = emptyList()
         runCurrent()
 
-        assertThat(viewModel.state.value.rows.filterIsInstance<VerticalTaskRow.Header>()).hasSize(61)
+        assertThat(viewModel.state.value.rows.filterIsInstance<VerticalTaskRow.Header>()).hasSize(31)
     }
 
     @Test
@@ -438,7 +443,7 @@ class VerticalTasksViewModelTest {
         tasks.value = emptyList()
         runCurrent()
 
-        assertThat(viewModel.state.value.rows.filterIsInstance<VerticalTaskRow.Empty>()).hasSize(61)
+        assertThat(viewModel.state.value.rows.filterIsInstance<VerticalTaskRow.Empty>()).hasSize(31)
     }
 
     @Test
@@ -509,6 +514,107 @@ class VerticalTasksViewModelTest {
         verify(exactly = 1) { interactions.onReviewFinished() }
     }
 
+    @Test
+    fun `past tasks have one header and dates are newest first`() = runTest(main.testDispatcher) {
+        tasks.value = listOf(
+            TaskToday.copy(id = 1, day = today.minusDays(3), position = 0),
+            TaskToday.copy(id = 2, day = today.minusDays(1), position = 2),
+            TaskToday.copy(id = 3, day = today.minusDays(1), position = 1),
+        )
+        val viewModel = loadedViewModel()
+        val rows = viewModel.state.value.rows
+        assertThat(rows.filterIsInstance<VerticalTaskRow.PastHeader>()).hasSize(1)
+        assertThat(rows.filterIsInstance<VerticalTaskRow.Header>().any { it.day < today }).isFalse()
+        assertThat(rows.filterIsInstance<VerticalTaskRow.Item>().map { it.task.id })
+            .containsExactly(3L, 2L, 1L).inOrder()
+    }
+
+    @Test
+    fun `past filter is reactive and does not hide completed tasks today`() = runTest(main.testDispatcher) {
+        tasks.value = listOf(
+            TaskToday.copy(id = 1, day = today.minusDays(1), isDone = true),
+            TaskToday.copy(id = 2, day = today.minusDays(1), isDone = false),
+            TaskToday.copy(id = 3, day = today, isDone = true),
+        )
+        val viewModel = loadedViewModel()
+        undoneOnly.value = true
+        runCurrent()
+        assertThat(viewModel.state.value.rows.filterIsInstance<VerticalTaskRow.Item>().map { it.task.id })
+            .containsExactly(2L, 3L).inOrder()
+        undoneOnly.value = false
+        runCurrent()
+        assertThat(viewModel.state.value.rows.filterIsInstance<VerticalTaskRow.Item>()).hasSize(3)
+    }
+
+    @Test
+    fun `completing the last past task removes it while keeping history loading reachable`() = runTest(main.testDispatcher) {
+        undoneOnly.value = true
+        tasks.value = listOf(TaskToday.copy(id = 1, day = today.minusDays(1), isDone = false))
+        val viewModel = loadedViewModel()
+        tasks.value = tasks.value.map { it.copy(isDone = true) }
+        runCurrent()
+        assertThat(viewModel.state.value.rows.filterIsInstance<VerticalTaskRow.Item>()).isEmpty()
+        assertThat(viewModel.state.value.rows.filterIsInstance<VerticalTaskRow.LoadOlder>()).hasSize(1)
+    }
+
+    @Test
+    fun `selecting a loaded past date with visible tasks targets Past`() = runTest(main.testDispatcher) {
+        tasks.value = listOf(TaskToday.copy(id = 1, day = today.minusDays(1)))
+        val viewModel = loadedViewModel()
+        viewModel.selectDay(today.minusDays(2))
+        assertThat(viewModel.state.value.scrollTarget?.day).isEqualTo(today.minusDays(2))
+        assertThat(viewModel.state.value.window).isEqualTo(DateWindow.around(today))
+    }
+
+    @Test
+    fun `selecting an empty distant past period returns to today without a stuck target`() = runTest(main.testDispatcher) {
+        val viewModel = loadedViewModel()
+        viewModel.selectDay(today.minusYears(2))
+        runCurrent()
+        assertThat(viewModel.state.value.selectedDay).isEqualTo(today)
+        assertThat(viewModel.state.value.window).isEqualTo(DateWindow.around(today))
+        assertThat(viewModel.state.value.scrollTarget?.day).isEqualTo(today)
+    }
+
+    @Test
+    fun `scrolling in Past does not automatically fetch earlier dates`() = runTest(main.testDispatcher) {
+        val viewModel = loadedViewModel()
+        viewModel.onScrollHandled(0)
+        val window = viewModel.state.value.window
+        viewModel.onVisibleRange(window.start, today.minusDays(1))
+        runCurrent()
+        assertThat(viewModel.state.value.window).isEqualTo(window)
+    }
+
+    @Test
+    fun `past filter changes during dragging are applied after the drag finishes`() = runTest(main.testDispatcher) {
+        tasks.value = listOf(
+            TaskToday.copy(id = 1, day = today.minusDays(1), position = 0, isDone = false),
+            TaskToday.copy(id = 2, day = today.minusDays(1), position = 1, isDone = true),
+        )
+        val viewModel = loadedViewModel()
+        viewModel.onDragStarted(1)
+        val original = viewModel.state.value.rows
+        undoneOnly.value = true
+        runCurrent()
+        assertThat(viewModel.state.value.rows).isEqualTo(original)
+        viewModel.onDragStopped()
+        runCurrent()
+        assertThat(viewModel.state.value.rows.filterIsInstance<VerticalTaskRow.Item>().map { it.task.id })
+            .containsExactly(1L)
+    }
+
+    @Test
+    fun `a visible past task anchor survives recreation`() = runTest(main.testDispatcher) {
+        tasks.value = listOf(TaskToday.copy(id = 1, day = today.minusDays(2)))
+        val saved = SavedStateHandle()
+        val viewModel = loadedViewModel(saved)
+        viewModel.onScrollHandled(0)
+        viewModel.onAnchor(today.minusDays(2), 1, 24)
+        val restored = loadedViewModel(saved)
+        assertThat(restored.state.value.scrollTarget).isEqualTo(ScrollTarget(today.minusDays(2), 1, 24))
+    }
+
     private fun loadedViewModel(saved: SavedStateHandle = SavedStateHandle()): VerticalTasksViewModel =
         viewModel(saved).also { main.testDispatcher.scheduler.runCurrent() }
 
@@ -524,6 +630,7 @@ class VerticalTasksViewModelTest {
         return VerticalTasksViewModel(
             observeTasks = ObserveTasksInRangeUseCase(repository),
             moveTask = move,
+            settingsRepository = settings,
             savedState = saved,
             clock = clock,
             snackbar = snackbar,
