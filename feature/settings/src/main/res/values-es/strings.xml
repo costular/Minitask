@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="settings_tasks_section_title">Tareas</string>
-    <string name="settings_move_undone_tasks_title">Mover para mañana tareas sin terminar automáticamente</string>
-    <string name="settings_move_undone_tasks_description">Aquellas tareas que no acabes serán movidas al día siguiente automáticamente para que no las olvides.</string>
-</resources>

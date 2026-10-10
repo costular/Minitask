@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="settings_tasks_section_title">Tasks</string>
-    <string name="settings_move_undone_tasks_title">Move undone tasks to tomorrow automatically</string>
-    <string name="settings_move_undone_tasks_description">Those tasks you do not finish will be moved to the next day automatically so you don\'t forget about them.</string>
-</resources>

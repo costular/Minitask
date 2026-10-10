@@ -6,30 +6,19 @@
     <string name="home_menu_settings">Settings</string>
 
     <string name="error_generic">Oh no! something failed :(</string>
-    <string name="ok">Okay</string>
     <string name="cancel">Cancel</string>
     <string name="accept">Accept</string>
     <string name="delete">Delete</string>
-
-    <string name="repetition_everyday">Everyday</string>
-    <string name="repetition_weekly">Weekly</string>
-    <string name="repetition_weekly_formatted">Every %1$s</string>
 
     <string name="day_yesterday">Yesterday</string>
     <string name="day_today">Today</string>
     <string name="day_tomorrow">Tomorrow</string>
 
-    <string name="field_error_empty">This field cannot be empty</string>
-
-    <string name="agenda_create_task">Create</string>
-    <string name="agenda_create_task_name">Task\'s name</string>
     <string name="agenda_edit_task">Edit</string>
     <string name="agenta_delete_task">Delete</string>
     <string name="agenda_mark_as_done">Mark as done</string>
     <string name="agenda_mark_as_undone">Mark as undone</string>
     <string name="agenda_create_new_task">New task</string>
-    <string name="agenda_tutorial_task_order">Want your tasks in order? Long press and drag!</string>
-    <string name="undo">Undo</string>
     <string name="today">Today</string>
     <string name="task_recurrence_never">Does not repeat</string>
     <string name="task_recurrence_daily">Repeats every day</string>
@@ -38,15 +27,10 @@
     <string name="task_recurrence_monthly">Repeats every month</string>
     <string name="task_recurrence_yearly">Repeats every year</string>
     <string name="remove_task_message">Are you sure to remove this task?</string>
-    <string name="no_reminder">No reminder</string>
-    <string name="enable_reminder">Enable reminder</string>
     <string name="task_list_empty_title">No tasks</string>
     <string name="task_list_empty_description">No task for this day yet!</string>
 
     <!-- Create task -->
-    <string name="create_task_set_date">Choose a Date</string>
-    <string name="create_task_set_reminder">Set reminder</string>
-    <string name="create_task_set_recurrence">Repeat</string>
     <string name="create_task_recurrence_picker_none">Does not repeat</string>
     <string name="create_task_recurrence_picker_daily">Every Day</string>
     <string name="create_task_recurrence_picker_weekdays">Every Weekday</string>
@@ -56,16 +40,7 @@
 
     <!-- Task detail -->
     <string name="task_detail_task_name_placeholder">Add title</string>
-    <string name="task_detail_day_subhead">Date</string>
-    <string name="task_detail_reminder_subhead">Reminder</string>
     <string name="task_detail_reminder_add_reminder">Add reminder</string>
-    <string name="task_detail_recurrence_subhead">Repeat</string>
-    <string name="task_detail_recurrence_picker_none">Does not repeat</string>
-    <string name="task_detail_recurrence_picker_daily">Every Day</string>
-    <string name="task_detail_recurrence_picker_weekdays">Every Weekday</string>
-    <string name="task_detail_recurrence_picker_weekly">Every Week</string>
-    <string name="task_detail_recurrence_picker_monthly">Every Month</string>
-    <string name="task_detail_recurrence_picker_yearly">Every Year</string>
     <string name="task_detail_discard_changes_title">Discard changes?</string>
     <string name="task_detail_discard_changes_description">You have unsaved changes. If you exit, all changes will be lost. Do you want to continue without saving?</string>
     <string name="task_detail_discard_changes_positive">Discard</string>
@@ -80,7 +55,6 @@
 
     <string name="notification_channel_reminders_title">Reminders</string>
     <string name="notification_channel_reminders_description">Reminders for your tasks</string>
-    <string name="notification_reminder">🔔 Reminder</string>
     <string name="notification_reminder_done">Done</string>
     <string name="notification_reminder_postpone">Postpone</string>
 
@@ -125,8 +99,6 @@
 
     <string name="save">Save</string>
     <string name="content_description_chip_clear">Clear</string>
-    <string name="agenda_edit_title">Edit task</string>
-    <string name="create_task_reminder_past_error">The reminder is set for a past date. Select a future reminder</string>
     <string name="create_task_schedule_exact_reminder_permission_missing_title">Permission required to set exact reminders</string>
     <string name="create_task_schedule_exact_reminder_permission_missing_description">To use the reminder feature, we require the exact alarm permission. Without it, reminders won\'t work at all.</string>
     <string name="create_task_schedule_exact_reminder_permission_missing_dismiss">I Understand</string>
@@ -166,7 +138,6 @@
     <string name="settings_backup_import_confirm_positive">Restore</string>
     <string name="settings_backup_success">Backup created successfully</string>
     <string name="settings_restore_success">Backup restored successfully</string>
-    <string name="settings_backup_loading">Processing…</string>
     <string name="search_tasks">Search tasks</string>
     <string name="search_clear">Clear search</string>
     <string name="search_no_results">No matching tasks</string>
