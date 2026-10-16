@@ -34,3 +34,12 @@ _Minitask_ is an Android application to create and organise your tasks.
 You're more than welcome to contribute to this project and it will be appreciated.
 
 Just keep in mind that not everything would match with the application's goals so make sure you ask before putting effort on any feature.
+
+### Translations
+
+Help translate the app or improve existing translations through [Crowdin](https://crowdin.com/project/minitask). Contributions of any size are welcome, and no programming experience is needed.
+
+1. Join the Crowdin project, select your language, and open `strings.xml`.
+2. Translate missing strings or review suggestions. Preserve placeholders such as `%1$s` and resolve quality-check warnings.
+
+Use Crowdin comments to ask about unclear text, or [open an issue](https://github.com/costular/atom-tasks/issues) to request a new language. Translations are reviewed before inclusion in a release. See [Crowdin’s translator guide](https://support.crowdin.com/for-translators/) for help.

@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Export Crowdin translations to two-letter language folders, matching existing resources such as `values-es`.
+
 ### Security
 
 ## [2.14.0] - 2026-10-05
